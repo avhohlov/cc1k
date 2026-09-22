@@ -1,0 +1,1 @@
+This project is essentially an assembly-language port of the pseudo-c-compiler (https://sourceforge.net/projects/pseudo-c-compiler). Two ideas were borrowed from the sectorc (https://github.com/xorvoid/sectorc): a simplified tokenizer and the use of string hash codes instead of the strings themselves.
