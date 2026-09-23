@@ -1,4 +1,4 @@
-      ; Simplified asm version of Pseudo C compiler (https://sourceforge.net/projects/pseudo-c-compiler)
+      ; Simplified asm port of Pseudo C compiler (https://sourceforge.net/projects/pseudo-c-compiler)
       ; To compile initial C version it must be modified:
       ; 1. All words and symbols must be separated by spaces
       ;    For example, Init(); statement must be replaced
@@ -35,7 +35,7 @@
 
         cld
 
-        mov    AX ,    233     ; jmp
+        mov    AL ,    233     ; jmp
         stosb
         stosw                  ; Reserved for ofs
 
@@ -134,7 +134,7 @@ compile_fn :
 process_stmt :
         call   stmt            ; Next token available
 
-        mov    AX ,    195     ; retn
+        mov    AL ,    195     ; retn
         stosb
 
         pop    AX              ; Code Offset
@@ -226,7 +226,7 @@ do_if :
         cmp    CX ,    59723   ; else
         jne    no_else
 
-        mov    AX ,    233     ; jmp
+        mov    AL ,    233     ; jmp
         stosb
         mov    DX ,    DI
         stosw                  ; Reserved for ofs
@@ -277,7 +277,7 @@ do_while :
         pop    BX
         pop    DX              ; while ofs
 
-        mov    AX ,    233     ; jmp
+        mov    AL ,    233     ; jmp
         stosb
         sub    DX ,    DI
         dec    DX
@@ -329,7 +329,7 @@ do_return :
         call   get_tok
         call   expr
 
-        mov    AX ,    195     ; retn
+        mov    AL ,    195     ; retn
         stosb
 
       ; call   get_tok
@@ -388,7 +388,7 @@ store_to_var :
       ; pop    DX
       ; pop    BX
 
-        mov    AX ,    80      ; 0x50 push AX
+        mov    AL ,    80      ; 0x50 push AX
         stosb
 
       ; push   BX              ; TODO Extra push/pop
@@ -403,7 +403,7 @@ store_to_var :
         pop    BX
 
       ; mov    AX ,    88      ; 0x58 pop  BX ; INFO Error
-        mov    AX ,    91      ; 0x5B pop  BX
+        mov    AL ,    91      ; 0x5B pop  BX
         stosb
 
         cmp    DX ,    1
@@ -429,7 +429,7 @@ store_to_simple_var :
         mov    CX ,    6       ; [Ofs]
 
 store_any :
-        mov    AX ,    136     ; 0x88
+        mov    AL ,    136     ; 0x88
         cmp    DX ,    1
         je     store_to_any_2
         inc    AX
@@ -471,14 +471,14 @@ cond :
 
         push   CX
 
-        mov    AX ,    80      ; 0x50 push AX
+        mov    AL ,    80      ; 0x50 push AX
         stosb
 
         call   get_tok
         call   expr            ; CX = )
 
       ; mov    AX ,    88      ; 0x58 pop  BX ; INFO Error
-        mov    AX ,    91      ; 0x5B pop  BX
+        mov    AL ,    91      ; 0x5B pop  BX
         stosb
 
         pop    CX
@@ -509,7 +509,7 @@ do_cond :
         mov    AX ,  [ BX ]    ; Opcode
         stosw
 
-        mov    AX ,    233     ; jmp
+        mov    AL ,    233     ; jmp
         stosb
         mov    BX ,    DI
         stosw                  ; Reserved for ofs
@@ -538,7 +538,7 @@ cmp_oper :
         jmp    oper_loop
 
 do_oper :
-        mov    AX ,    80     ; 0x50 push AX
+        mov    AL ,    80      ; 0x50 push AX
         stosb
 
         push   BX
@@ -550,7 +550,7 @@ do_oper :
 
         push   CX              ; INFO Omitted
 
-        mov    AX ,    91      ; 0x5B pop  BX
+        mov    AL ,    91      ; 0x5B pop  BX
         stosb
 
         mov    CX ,  [ BX ]    ; Oper
@@ -559,7 +559,7 @@ do_oper :
         inc    BX
         mov    DX ,  [ BX ]    ; Opcode
 
-        mov    AX ,    147     ; 0x93 xchg AX, BX
+        mov    AL ,    147     ; 0x93 xchg AX, BX
         stosb
 
         mov    AX ,    53811   ; 0xD233 xor  DX, DX
@@ -573,7 +573,7 @@ not_div_mod :
 
         cmp    CX ,    65525   ; %
         jne    no_xchg
-        mov    AX ,    146     ; 0x92 xchg AX, DX
+        mov    AL ,    146     ; 0x92 xchg AX, DX
         stosb
 
 no_xchg :
@@ -588,7 +588,7 @@ operand :
         or     AX ,    AX
         je     var_or_fn
 
-        mov    AX ,    184     ; 0xB8 mov  AX, Val
+        mov    AL ,    184     ; 0xB8 mov  AX, Val
         stosb
         mov    AX ,    CX
         stosw
@@ -617,7 +617,7 @@ var_or_fn :
         cmp    CX ,    65528   ; Round bracket (opening)
         jne    load_var
 
-      ; mov    AX ,    232     ; 0xE8 call
+      ; mov    AL ,    232     ; 0xE8 call
       ; stosb
 
       ; sub    BX ,    DI
@@ -653,7 +653,7 @@ load_var :
         pop    AX              ; FIXME Check and improve
         push   CX
 
-        mov    AX ,    147     ; 0x93 xchg AX, BX
+        mov    AL ,    147     ; 0x93 xchg AX, BX
         stosb
 
         cmp    DX ,    1
@@ -697,7 +697,7 @@ load_var_2 :
 
 
 call_fn :
-        mov    AX ,    232     ; 0xE8 call
+        mov    AL ,    232     ; 0xE8 call
         stosb
 
         sub    BX ,    DI
