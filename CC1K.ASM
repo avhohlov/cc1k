@@ -57,6 +57,12 @@ char_type :
         call   get_tok         ; Name
         push   CX
 
+        call   find_name
+        cmp    BX ,    SI
+        jae    new_name
+        jmp    halt
+
+new_name :
         call   get_tok         ; Semicolon / square bracket / round bracket
 
         pop    DX              ; Name
@@ -333,7 +339,7 @@ do_return :
         jmp    get_tok
 
 do_assign :
-        call   find_name
+        call   find_and_load
 
       ; push   BX
       ; call   get_tok
@@ -594,7 +600,7 @@ operand :
         jmp    get_tok
 
 var_or_fn :
-        call   find_name
+        call   find_and_load
 
       ; push   BX
       ; call   get_tok
@@ -709,19 +715,13 @@ call_fn :
         jmp    get_tok_2
 
 
-find_name :
-        mov    BX ,    dict
-
-find_name_loop :
+find_and_load :
+        call   find_name
         cmp    BX ,    SI
-        jb     compare
+        jb     load_size_ofs
         jmp    halt
 
-compare :
-        mov    DX ,  [ BX ]
-        cmp    DX ,    CX
-        jne    next_name
-
+load_size_ofs :
         push   BX
         call   get_tok
         pop    BX
@@ -733,6 +733,22 @@ compare :
         inc    BX
         inc    BX
         mov    BX ,  [ BX ]    ; Ofs
+
+        retn
+
+
+find_name :
+        mov    BX ,    dict
+
+find_name_loop :
+        cmp    BX ,    SI
+        jb     compare
+        retn
+
+compare :
+        mov    DX ,  [ BX ]
+        cmp    DX ,    CX
+        jne    next_name
 
         retn
 
