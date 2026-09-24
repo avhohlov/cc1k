@@ -6,6 +6,7 @@
       ; 2. All hexadecimal constants must be repaced
       ;    with the same decimal constants
       ; 3. May be need to change data offset (dsz initial value)
+      ;
       ; (C) Andrei V. Khokhlov
 
         org    256             ; 0x100
@@ -123,10 +124,10 @@ compile_fn :
         inc    SI
         inc    SI
 
-      ; call   get_tok         ; Round bracket (closing)
       ; call   get_tok         ; void
-      ; call   get_tok
-        call   get_tok_3
+      ; call   get_tok         ; Round bracket (closing)
+        call   get_tok_2
+        call   get_tok
       ; cmp    CX ,    75      ; Curly bracket (opening)
       ; je     process_stmt
       ; jmp    halt
@@ -758,11 +759,9 @@ next_name :
         jmp    find_name_loop
 
 
-get_tok_3 :
-        call   get_tok
-
 get_tok_2 :
         call   get_tok
+
 
 get_tok :
         call   getc
