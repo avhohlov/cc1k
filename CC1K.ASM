@@ -154,15 +154,15 @@ compile_end :
         sub    AX ,    CX
         mov  [ BX ] ,  AX
 
-      ; mov    AH ,    62      ; 0x3E
-        mov    AX ,    15872
+        mov    AH ,    62      ; 0x3E
+      ; mov    AX ,    15872
       ; mov    BX ,  [ hnd ]
         mov    BX ,    hnd
         mov    BX ,  [ BX ]
         int    33              ; 0x21
 
-      ; mov    AH ,    60      ; 0x3C
-        mov    AX ,    15360
+        mov    AH ,    60      ; 0x3C
+      ; mov    AX ,    15360
         mov    CX ,    0
         mov    DX ,    dst
         int    33              ; 0x21
@@ -174,8 +174,8 @@ compile_end :
       ; mov  [ BX ] ,  AX
         mov    BX ,    AX
 
-      ; mov    AH ,    64      ; 0x40
-        mov    AX ,    16384
+        mov    AH ,    64      ; 0x40
+      ; mov    AX ,    16384
       ; mov    BX ,  [ hnd ]   ; TODO   mov    BX ,  pred AX
       ; mov    BX ,    hnd
       ; mov    BX ,  [ BX ]
@@ -184,8 +184,8 @@ compile_end :
         sub    CX ,    DX
         int    33              ; 0x21
 
-      ; mov    AH ,    62      ; 0x3E
-        mov    AX ,    15872
+        mov    AH ,    62      ; 0x3E
+      ; mov    AX ,    15872
       ; mov    BX ,  [ hnd ]
       ; mov    BX ,    hnd
       ; mov    BX ,  [ BX ]
@@ -895,8 +895,8 @@ not_lf :
 
 
 getc :
-      ; mov    AH ,     63     ; 0x3F
-        mov    AX ,     16128
+        mov    AH ,     63     ; 0x3F
+      ; mov    AX ,     16128
       ; mov    BX ,   [ hnd ]
         mov    BX ,     hnd
         mov    BX ,   [ BX ]
@@ -932,9 +932,11 @@ halt :
         int    33              ; 0x21
 
 newln :
-        mov    DX ,     13
+      ; mov    DX ,     13
+        mov    DL ,     13
         call   putc
-        mov    DX ,     10
+      ; mov    DX ,     10
+        mov    DL ,     10
         call   putc
 
         retn
@@ -962,7 +964,8 @@ put_char :
 
 
 putc :                         ; DL = char
-        mov    AX ,     512    ; AH = 2
+        mov    AH ,     2
+      ; mov    AX ,     512    ; AH = 2
         int    33
 
         retn

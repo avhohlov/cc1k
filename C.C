@@ -106,7 +106,7 @@ char      Chr ;
 char      putchr ( void )
 {
 // asm db      146 ;                      // asm db     0x92 ;                      // xchg DX, AX
-  asm db       139 ,   14 ;               // asm db     0x8A , 0x16 ;               // mov  DL, Chr
+  asm db       139 ,   22 ;               // asm db     0x8A , 0x16 ;               // mov  DL, Chr
   asm dw       offset   Chr ;
 
   asm db       180 ,    2 ;               // asm db     0xB4 , 0x02 ;               // mov  AH, 0x02
