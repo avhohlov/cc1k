@@ -311,7 +311,7 @@ do_asm :
         mov    AX ,    BX
         stosw
 
-      ; jmp    get_tok_2       ; INFO Error
+      ; jmp    get_tok_2       ; INFO Error - find_and_load calls get_tok once
       ; call   get_tok
 
       ; retn
@@ -358,37 +358,10 @@ do_return :
 do_assign :
         call   find_and_load
 
-      ; push   BX
-      ; call   get_tok
-      ; pop    BX
-
-      ; inc    BX
-      ; inc    BX
-      ; mov    DX ,  [ BX ]    ; Size
-
-      ; inc    BX
-      ; inc    BX
-      ; mov    BX ,  [ BX ]    ; Ofs
-
         cmp    CX ,    65528   ; Round bracket (opening)
         jne    store_to_var
 
-      ; mov    AX ,    232     ; 0xE8 call
-      ; stosb
-
-      ; sub    BX ,    DI
-      ; dec    BX
-      ; dec    BX
-      ; mov    AX ,    BX
-      ; stosw
-
-      ; call   get_tok         ; Round bracket (closing)
-      ; call   get_tok         ; Semicolon
-
         call   call_fn
-      ; call   get_tok
-
-      ; retn
 
         jmp    get_tok
 
@@ -600,10 +573,9 @@ no_xchg :
 
                                ; Operand
 operand :
-        mov    BX ,    nf
-        mov    AX ,  [ BX ]
-        or     AX ,    AX
-        je     var_or_fn
+      ; cmp    AL ,    57      ; 9
+        cmp    AX ,    57
+        ja     var_or_fn
 
         mov    AL ,    184     ; 0xB8 mov  AX, Val
         stosb
@@ -619,34 +591,8 @@ operand :
 var_or_fn :
         call   find_and_load
 
-      ; push   BX
-      ; call   get_tok
-      ; pop    BX
-
-      ; inc    BX
-      ; inc    BX
-      ; mov    DX ,  [ BX ]    ; Size
-
-      ; inc    BX
-      ; inc    BX
-      ; mov    BX ,  [ BX ]    ; Ofs
-
         cmp    CX ,    65528   ; Round bracket (opening)
         jne    load_var
-
-      ; mov    AL ,    232     ; 0xE8 call
-      ; stosb
-
-      ; sub    BX ,    DI
-      ; dec    BX
-      ; dec    BX
-      ; mov    AX ,    BX
-      ; stosw
-
-      ; call   get_tok         ; Round bracket (closing) ; INFO Omitted
-      ; call   get_tok
-
-      ; retn
 
         jmp    call_fn
 
@@ -778,7 +724,8 @@ next_name :
 get_tok_2 :
         call   get_tok
 
-
+                               ; AL = First Char or 0
+                               ; CX = Hash Code
 get_tok :
         call   getc
         sub    CX ,    CX      ; Hash Code
@@ -817,9 +764,6 @@ not_eol :
         inc    DX
 
 ident :
-        mov    BX ,    nf
-        mov  [ BX ] ,  DX
-
         cmp    AX ,    37      ; %
         jne    chk_char
 
@@ -830,21 +774,19 @@ chk_char :
         cmp    AX ,    39      ; Char
         jne    tok_next
 
-      ; inc    DX
-        mov    DX ,    1
-        mov  [ BX ] ,  DX      ; TODO Improve
-
+        push   AX
         call   getc
         push   AX
         call   getc            ; '
         pop    CX
+        pop    AX
 
         retn
 
 tok_next :
-      ; mov    BX ,    AX      ; INFO Error
-        push   AX              ; Pred char
+        push   AX              ; First Char
 
+tok_loop :
       ; xchg   AX ,    CX      ; TODO Implement?
       ; mov    DX ,    AX
       ; mov    AX ,    CX
@@ -860,17 +802,13 @@ tok_next :
         call   getc
         pop    CX
 
-        pop    DX              ; Pred char
-
       ; cmp    AL ,    32
         cmp    AX ,    32
-        ja     tok_next
+        ja     tok_loop
 
-        mov    AX ,    BX
+        pop    AX              ; First Char
 
-        mov    BX ,    nf
-        mov    BX ,  [ BX ]
-        or     BX ,    BX
+        cmp    AX ,    47      ; /
         je     chk_rem
         retn
 
@@ -1040,10 +978,6 @@ dsz :
 
 lno :                          ; Line number
         rw     1
-
-nf :                           ; Number flag
-        rw     1
-
                                ; Hash Code
                                ; Size (char = 1 / word = 2)
                                ; Ofs
