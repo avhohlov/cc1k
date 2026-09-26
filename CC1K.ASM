@@ -312,9 +312,11 @@ do_asm :
         stosw
 
       ; jmp    get_tok_2       ; INFO Error
-        call   get_tok
+      ; call   get_tok
 
-        retn
+      ; retn
+
+        jmp    get_tok
 
 do_db :
         mov    CX ,    65532   ; ,
