@@ -40,7 +40,10 @@ unsigned  open ( void )
 {
   asm db       180 ,   61 ;               // asm db     0xB4 , 0x3D ;               // mov  AH, 0x3D
   asm db       176 ,    0 ;               // asm db     0xB0 , 0x00 ;               // mov  AL, 0
-  asm db       186 ,   72 ,  220 ;        // asm db     0xBA , 0x48 , 0xDC ;        // mov  DX, &Heap[62]
+// asm db      186 ,   72 ,  220 ;        // asm db     0xBA , 0x48 , 0xDC ;        // mov  DX, &Heap[62]
+  asm db       186 ;                      // asm db     0xBA ;                      // mov  DX, &Heap
+  asm dw       offset   Heap ;
+  asm db       131 ,  194 ,   62 ;        // asm db     0x83 , 0xC2 , 0x3E ;        // add  DX, 62
   asm db       205 ,   33 ;               // asm db     0xCD , 0x21 ;               // int  0x21
 }
 
@@ -49,7 +52,10 @@ unsigned  create ( void )
 {
   asm db       180 ,   60 ;               // asm db     0xB4 , 0x3C ;               // mov  AH, 0x3C
   asm db       185 ,    0 ,    0 ;        // asm db     0xB9 , 0x00 , 0x00 ;        // mov  AL, 0
-  asm db       186 ,   76 ,  220 ;        // asm db     0xBA , 0x4C , 0xDC ;        // mov  DX, &Heap[66]
+// asm db      186 ,   76 ,  220 ;        // asm db     0xBA , 0x4C , 0xDC ;        // mov  DX, &Heap[66]
+  asm db       186 ;                      // asm db     0xBA ;                      // mov  DX, &Heap
+  asm dw       offset   Heap ;
+  asm db       131 ,  194 ,   66 ;        // asm db     0x83 , 0xC2 , 0x42 ;        // add  DX, 66
   asm db       205 ,   33 ;               // asm db     0xCD , 0x21 ;               // int  0x21
 }
 
@@ -57,9 +63,13 @@ unsigned  create ( void )
 unsigned  read ( void )
 {
   asm db       180 ,   63 ;               // asm db     0xB4 , 0x3F ;               // mov  AH, 0x3F
-  asm db       139 ,   30 ,    8 ,  220 ; // asm db     0x8B , 0x1E , 0x08 , 0xDC ; // mov  DX, hFile
+// asm db      139 ,   30 ,    8 ,  220 ; // asm db     0x8B , 0x1E , 0x08 , 0xDC ; // mov  BX, hFile
+  asm db       139 ,   30 ;               // asm db     0x8B , 0x1E ;               // mov  BX, hFile         
+  asm dw       offset   hFile ;
   asm db       185 ,    0 ,    4 ;        // asm db     0xB9 , 0x00 , 0x04 ;        // mov  CX, 1024
-  asm db       186 ,    0 ,   24 ;        // asm db     0xBA , 0x00 , 0x18 ;        // mov  DX, &Text
+// asm db      186 ,    0 ,   24 ;        // asm db     0xBA , 0x00 , 0x18 ;        // mov  DX, &Text
+  asm db       186 ;                      // asm db     0xBA ;                      // mov  DX, &Text
+  asm dw       offset   Text ;
   asm db       205 ,   33 ;               // asm db     0xCD , 0x21 ;               // int  0x21
 }
 
@@ -67,9 +77,15 @@ unsigned  read ( void )
 unsigned  write ( void )
 {
   asm db       180 ,   64 ;               // asm db     0xB4 , 0x40 ;               // mov  AH, 0x40
-  asm db       139 ,   30 ,    8 ,  220 ; // asm db     0x8B , 0x1E , 0x08 , 0xDC ; // mov  BX, hFile
-  asm db       139 ,   14 ,    6 ,  220 ; // asm db     0x8B , 0x0E , 0x06 , 0xDC ; // mov  CX, nCode
-  asm db       186 ,    6 ,   28 ;        // asm db     0xBA , 0x06 , 0x1C ;        // mov  DX, &Code
+// asm db      139 ,   30 ,    8 ,  220 ; // asm db     0x8B , 0x1E , 0x08 , 0xDC ; // mov  BX, hFile
+  asm db       139 ,   30 ;               // asm db     0x8B , 0x1E ;               // mov  BX, hFile         
+  asm dw       offset   hFile ;
+// asm db      139 ,   14 ,    6 ,  220 ; // asm db     0x8B , 0x0E , 0x06 , 0xDC ; // mov  CX, nCode
+  asm db       139 ,   14 ;               // asm db     0x8B , 0x0E ;               // mov  CX, nCode
+  asm dw       offset   nCode ;
+// asm db      186 ,    6 ,   28 ;        // asm db     0xBA , 0x06 , 0x1C ;        // mov  DX, &Code
+  asm db       186 ;                      // asm db     0xBA ;                      // mov  DX, &Code
+  asm dw       offset   Code ;
   asm db       205 ,   33 ;               // asm db     0xCD , 0x21 ;               // int  0x21
 }
 
@@ -77,17 +93,22 @@ unsigned  write ( void )
 unsigned  close ( void )
 {
   asm db       180 ,   62 ;               // asm db     0xB4 , 0x3E ;               // mov  AH, 0x3E
-  asm db       139 ,   30 ,    8 ,  220 ; // asm db     0x8B , 0x1E , 0x08 , 0xDC ; // mov  BX, hFile
+// asm db      139 ,   30 ,    8 ,  220 ; // asm db     0x8B , 0x1E , 0x08 , 0xDC ; // mov  BX, hFile
+  asm db       139 ,   30 ;               // asm db     0x8B , 0x1E ;               // mov  BX, hFile         
+  asm dw       offset   hFile ;
   asm db       205 ,   33 ;               // asm db     0xCD , 0x21 ;               // int  0x21
 }
 
 
 // char      Ch;                          // INFO Space omitted!
-char      Ch ;
+char      Chr ;
 
 char      putchr ( void )
 {
-  asm db       146 ;                      // asm db     0x92 ;                      // xchg DX, AX
+// asm db      146 ;                      // asm db     0x92 ;                      // xchg DX, AX
+  asm db       139 ,   14 ;               // asm db     0x8A , 0x16 ;               // mov  DL, Chr
+  asm dw       offset   Chr ;
+
   asm db       180 ,    2 ;               // asm db     0xB4 , 0x02 ;               // mov  AH, 0x02
   asm db       205 ,   33 ;               // asm db     0xCD , 0x21 ;               // int  0x21
 }
@@ -247,7 +268,8 @@ unsigned  Stop ( void )
 
   while ( pStk != 0 )
   {
-    Ch = Pop ( )  + 48 ;
+  // Ch = Pop ( )  + 48 ;
+    Chr = Pop ( )  + 48 ;
     putchr ( ) ;
   }
 
@@ -570,7 +592,7 @@ unsigned  Expr ( void )
       Emit1 ( ) ;
 
       N = Ofs [ I ] ;
-      Ofs   [ I ]  = nCode ;
+      Ofs [ I ] = nCode ;
       Emit2 ( ) ;
     }
     else if ( Cls [ I ] == 3 )
@@ -721,7 +743,7 @@ unsigned  Patch ( void )
 
 unsigned  Ctrl ( void )
 {
-  I           =  Find ( ) ;
+  I            =  Find ( ) ;
   if      ( I >= nName )
     Stop ( ) ;
   else if ( I == 2 )                      // {
@@ -790,27 +812,44 @@ unsigned  Ctrl ( void )
   {
     Scan ( ) ;                            // db
 
-    Buff [ 0 ]   =  ',' ;
-    while ( Buff [ 0 ] == ',' )
+    if ( Buff [ 1 ] == 'w' )              // dw
     {
-      Scan  ( ) ;
-      C = val ( ) ;                       // db   Val
-      Emit1 ( ) ;
+      Scan ( ) ;                          // offset
+      Scan ( ) ;
+      I           =  Find ( ) ;
+      if     ( I >= nName )
+        Stop ( ) ;
 
-      Scan  ( ) ;
+      N = Ofs [ I ] ;
+      Ofs [ I ] = nCode ;
+      Emit2 ( ) ;
+
+      Scan ( ) ;                          // ;
+    }
+    else
+    {
+      Buff [ 0 ]   =  ',' ;
+      while ( Buff [ 0 ] == ',' )
+      {
+        Scan  ( ) ;
+        C = val ( ) ;                     // db   Val
+        Emit1 ( ) ;
+
+        Scan  ( ) ;
+      }
     }
 
-    Scan ( ) ;                           // !!!
+    Scan ( ) ;                            // !!!
   }
-  else if ( I == 6 )                     // return
+  else if ( I == 6 )                      // return
   {
     Scan ( ) ;
     Expr ( ) ;
 
-    C = 195 ;                            // 0xC3 // retn
+    C = 195 ;                             // 0xC3 // retn
     Emit1 ( ) ;
 
-    Scan ( ) ;                           // !!!
+    Scan ( ) ;                            // !!!
   }
   else if ( Cls [ I ] == 2 )
   {

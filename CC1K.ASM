@@ -25,7 +25,8 @@
 
                                ; Compiling
       ; mov    AX ,    16640   ; INFO Depend on compiled program code size - see C.C/AssignOfs()
-        mov    AX ,    6144
+      ; mov    AX ,    6144    ; FIXME Error - code and data overlap
+        mov    AX ,    6400
         mov    BX ,    dsz
         mov  [ BX ] ,  AX
         mov    AX ,    1
@@ -301,8 +302,21 @@ do_while :
 do_asm :
         cmp    CX ,    5631    ; asm
         jne    do_return
-        call   get_tok         ; db
+        call   get_tok         ; db/dw
+        cmp    CX ,    591     ; dw
+        jne    do_db
 
+        call   get_tok_2       ; offset Name
+        call   find_and_load   ; BX = Ofs
+        mov    AX ,    BX
+        stosw
+
+      ; jmp    get_tok_2       ; INFO Error
+        call   get_tok
+
+        retn
+
+do_db :
         mov    CX ,    65532   ; ,
         jmp    comma_cmp
 
