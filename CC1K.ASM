@@ -26,7 +26,7 @@
                                ; Compiling
       ; mov    AX ,    16640   ; INFO Depend on compiled program code size - see C.C/AssignOfs()
       ; mov    AX ,    6144    ; FIXME Error - code and data overlap
-        mov    AX ,    6400
+        mov    AX ,    7168
         mov    SI ,    dsz
         mov  [ SI ] ,  AX
         mov    AX ,    1
@@ -476,7 +476,8 @@ cond :
         mov    SI ,    cond_tab
 
 cond_loop :
-        mov    AX ,  [ SI ]
+      ; mov    AX ,  [ SI ]
+        lodsw
         or     AX ,    AX
         jne    cmp_cond_op
         jmp    halt
@@ -485,7 +486,8 @@ cmp_cond_op :
         cmp    AX ,    CX
         je     do_cond
 
-        add    SI ,    4
+      ; add    SI ,    4
+        lodsw
 
         jmp    cond_loop
 
@@ -494,9 +496,10 @@ do_cond :
       ; stosb                  ; INFO Error
         stosw
 
-        inc    SI
-        inc    SI
-        mov    AX ,  [ SI ]    ; Opcode
+      ; inc    SI
+      ; inc    SI
+      ; mov    AX ,  [ SI ]    ; Opcode
+        lodsw
         stosw
 
         mov    AL ,    233     ; jmp
@@ -513,7 +516,7 @@ expr :
         mov    SI ,    oper_tab
 
 oper_loop :
-        mov    AX ,  [ SI ]
+        lodsw
         or     AX ,    AX
         jne    cmp_oper
         retn
@@ -522,7 +525,7 @@ cmp_oper :
         cmp    AX ,    CX
         je     do_oper
 
-        add    SI ,    4
+        lodsw
 
       ; jmp    cond_loop       ; INFO Error
         jmp    oper_loop
@@ -531,44 +534,39 @@ do_oper :
         mov    AL ,    80      ; 0x50 push AX
         stosb
 
+        push   CX              ; Operator
         push   SI
 
         call   get_tok
-        call   operand
+        call   operand         ; CX = next token value
 
         pop    SI
+        pop    DX              ; Operator
 
-        push   CX              ; INFO Omitted
-
-        mov    AL ,    91      ; 0x5B pop  SI
+        mov    AL ,    91      ; 0x5B pop  BX
         stosb
 
-        mov    CX ,  [ SI ]    ; Oper
-
-        inc    SI
-        inc    SI
-        mov    DX ,  [ SI ]    ; Opcode
-
-        mov    AL ,    147     ; 0x93 xchg AX, SI
+        mov    AL ,    147     ; 0x93 xchg AX, BX
         stosb
 
-        mov    AX ,    53811   ; 0xD233 xor  DX, DX
-        cmp    DX ,    62455   ; 0xF3F7 div  SI
+        lodsw                  ; Opcode
+
+        cmp    AX ,    62455   ; 0xF3F7 div  BX
         jne    not_div_mod
+        push   AX
+        mov    AX ,    53811   ; 0xD233 xor  DX, DX
         stosw
+        pop    AX
 
 not_div_mod :
-        mov    AX ,    DX
         stosw
 
-        cmp    CX ,    65525   ; %
+        cmp    DX ,    65525   ; %
         jne    no_xchg
         mov    AL ,    146     ; 0x92 xchg AX, DX
         stosb
 
 no_xchg :
-        pop   CX               ; INFO Omitted
-
         retn
 
                                ; Operand
@@ -689,13 +687,17 @@ load_size_ofs :
         call   get_tok
         pop    SI
 
-        inc    SI
-        inc    SI
-        mov    DX ,  [ SI ]    ; Size
+      ; inc    SI
+      ; inc    SI
+      ; mov    DX ,  [ SI ]    ; Size
+        lodsw
+        mov    DX ,    AX
 
-        inc    SI
-        inc    SI
-        mov    SI ,  [ SI ]    ; Ofs
+      ; inc    SI
+      ; inc    SI
+      ; mov    SI ,  [ SI ]    ; Ofs
+        lodsw
+        mov    SI,     AX
 
         retn
 
@@ -709,14 +711,18 @@ find_name_loop :
         retn
 
 compare :
-        mov    DX ,  [ SI ]
-        cmp    DX ,    CX
+      ; mov    DX ,  [ SI ]
+        lodsw
+      ; cmp    DX ,    CX
+        cmp    AX ,    CX
         jne    next_name
 
         retn
 
 next_name :
-        add    SI ,    6
+      ; add    SI ,    6
+        lodsw
+        lodsw
 
         jmp    find_name_loop
 
