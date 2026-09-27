@@ -19,23 +19,35 @@
 
                                ; TODO   Check CF
 
-      ; mov  [ hnd ] , AX
-        mov    SI ,    hnd
-        mov  [ SI ] ,  AX
+        cld
 
+      ; mov  [ hnd ] , AX
+        mov    DI ,    hnd
+      ; mov  [ DI ] ,  AX
+        stosw
+         
                                ; Compiling
       ; mov    AX ,    16640   ; INFO Depend on compiled program code size - see C.C/AssignOfs()
       ; mov    AX ,    6144    ; FIXME Error - code and data overlap
         mov    AX ,    7168
-        mov    SI ,    dsz
-        mov  [ SI ] ,  AX
+        mov    DI ,    dsz
+      ; mov  [ DI ] ,  AX
+        stosw
         mov    AX ,    1
-        mov    SI ,    lno
-        mov  [ SI ] ,  AX      ; Line = 1
+      ; mov    DI ,    lno
+      ; mov  [ DI ] ,  AX      ; Line = 1
+        stosw                  ; lno must be immediately after dsz!
+
+        sub    AX ,    AX
+        mov    DI ,    nText
+      ; mov  [ DI ] ,  AX
+        stosw                  ; [nText] = AX
+      ; mov    DI ,    pText
+      ; mov  [ DI ] ,  AX
+        stosw                  ; [pText] = AX, pText must be immediately after nText!
+
         mov    BX ,    dict    ; nDict
         mov    DI ,    code    ; nCode
-
-        cld
 
         mov    AL ,    233     ; jmp
         stosb
@@ -841,31 +853,78 @@ not_lf :
 
 
 getc :
-        push   BX              ; INFO Required after BX-SI roles swapped
+      ; push   BX              ; INFO Required after BX-SI roles swapped
+      ; mov    AH ,     63     ; 0x3F
+    ; ; mov    AX ,     16128
+    ; ; mov    BX ,   [ hnd ]
+      ; mov    BX ,     hnd
+      ; mov    BX ,   [ BX ]
+      ; mov    CX ,     1
+      ; mov    DX ,     buf
+      ; int    33              ; 0x21
+      ; pop    BX
+
+                               ; TODO   Check CF
+
+      ; or     AX ,     AX
+      ; je     eof
+    ; ; mov    AL ,   [ buf]
+      ; mov    SI ,     buf
+      ; mov    AL ,   [ SI ]
+
+    ; ; push   AX
+    ; ; mov    DX ,     AX
+    ; ; call   putc
+    ; ; pop    AX
+
+eof :
+    ;   retn
+
+        mov    SI ,     nText
+
+      ; mov    AX ,   [ SI ]
+        lodsw
+        mov    DX ,   [ SI ]   ; DX = [pText], pText must be immediately after nText!
+        cmp    DX ,     AX
+        jb     ready
+
+        push   BX
+
         mov    AH ,     63     ; 0x3F
-      ; mov    AX ,     16128
-      ; mov    BX ,   [ hnd ]
         mov    BX ,     hnd
         mov    BX ,   [ BX ]
-        mov    CX ,     1
-        mov    DX ,     buf
+        mov    CX ,     1024
+        mov    DX ,     text
         int    33              ; 0x21
+
         pop    BX
 
                                ; TODO   Check CF
 
-        or     AX ,     AX
-        je     eof
-      ; mov    AL ,   [ buf]
-        mov    SI ,     buf
-        mov    AL ,   [ SI ]
+        mov    SI ,     nText
+        mov  [ SI ] ,   AX
+
+        sub    DX ,     DX
+        cmp    DX ,     AX
+        jae    set_ptext
+
+ready :
+        mov    SI,      text
+        add    SI ,     DX
+        sub    AX ,     AX     ; FIXME
+      ; mov    AL ,   [ SI ]
+        lodsb
+        inc    DX
+
+set_ptext :
+        mov    SI ,     pText
+        mov  [ SI ] ,   DX
 
       ; push   AX
       ; mov    DX ,     AX
       ; call   putc
       ; pop    AX
 
-eof :
         retn
 
 
@@ -936,7 +995,7 @@ oper_tab :
         dw     62455           ; 0xF3F7
 
         dw     0
-        dw     0
+      ; dw     0               ; INFO Unnecessary
 
 cond_tab :
         dw     12              ; <
@@ -959,7 +1018,7 @@ cond_tab :
         dw     887
 
         dw     0
-        dw     0
+      ; dw     0               ; INFO Unnecessary
 
 src :
         db     67              ; C.C
@@ -979,7 +1038,16 @@ hnd :
         rw     1
 
 buf :
-        rw     1               ; TODO rb?
+      ; rw     1               ; TODO rb?
+
+text :
+        rb     1024
+
+nText :
+        rw     1
+
+pText :
+        rw     1
 
 dsz :
         rw     1               ; Data size
