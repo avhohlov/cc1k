@@ -20,19 +20,19 @@
                                ; TODO   Check CF
 
       ; mov  [ hnd ] , AX
-        mov    BX ,    hnd
-        mov  [ BX ] ,  AX
+        mov    SI ,    hnd
+        mov  [ SI ] ,  AX
 
                                ; Compiling
       ; mov    AX ,    16640   ; INFO Depend on compiled program code size - see C.C/AssignOfs()
       ; mov    AX ,    6144    ; FIXME Error - code and data overlap
         mov    AX ,    6400
-        mov    BX ,    dsz
-        mov  [ BX ] ,  AX
+        mov    SI ,    dsz
+        mov  [ SI ] ,  AX
         mov    AX ,    1
-        mov    BX ,    lno
-        mov  [ BX ] ,  AX      ; Line = 1
-        mov    SI ,    dict    ; nDict
+        mov    SI ,    lno
+        mov  [ SI ] ,  AX      ; Line = 1
+        mov    BX ,    dict    ; nDict
         mov    DI ,    code    ; nCode
 
         cld
@@ -60,7 +60,7 @@ char_type :
         push   CX
 
         call   find_name
-        cmp    BX ,    SI
+        cmp    SI ,    BX
         jae    new_name
         jmp    halt
 
@@ -68,14 +68,14 @@ new_name :
         call   get_tok         ; Semicolon / square bracket / round bracket
 
         pop    DX              ; Name
-        mov  [ SI ] ,  DX
-        inc    SI
-        inc    SI
+        mov  [ BX ] ,  DX
+        inc    BX
+        inc    BX
 
         pop    AX              ; Size
-        mov  [ SI ] ,  AX
-        inc    SI
-        inc    SI
+        mov  [ BX ] ,  AX
+        inc    BX
+        inc    BX
 
         cmp    CX ,    65528   ; Round bracket (opening)
         jne    add_var
@@ -97,12 +97,12 @@ add_var :
         pop    AX
 
 simple_var :
-        mov    BX ,    dsz
-        mov    DX ,  [ BX ]
+        mov    SI ,    dsz
+        mov    DX ,  [ SI ]
 
-        mov  [ SI ] ,  DX      ; Data offset
-        inc    SI
-        inc    SI
+        mov  [ BX ] ,  DX      ; Data offset
+        inc    BX
+        inc    BX
 
         mov    CX ,    AX
         and    CX ,    1
@@ -111,7 +111,7 @@ simple_var :
 
 align_2 :
         add    DX ,    AX
-        mov  [ BX ] ,  DX
+        mov  [ SI ] ,  DX
 
         call   get_tok
 
@@ -121,9 +121,9 @@ compile_fn :
         push   DX              ; Name
         push   DI              ; Code offset
 
-        mov  [ SI ] ,  DI      ; Code offset
-        inc    SI
-        inc    SI
+        mov  [ BX ] ,  DI      ; Code offset
+        inc    BX
+        inc    BX
 
       ; call   get_tok         ; void
       ; call   get_tok         ; Round bracket (closing)
@@ -146,19 +146,19 @@ process_stmt :
         jmp    compile
 
 compile_end :
-        mov    BX ,    code
-        inc    BX
-        mov    CX ,    BX
+        mov    SI ,    code
+        inc    SI
+        mov    CX ,    SI
         inc    CX
         inc    CX
         sub    AX ,    CX
-        mov  [ BX ] ,  AX
+        mov  [ SI ] ,  AX
 
         mov    AH ,    62      ; 0x3E
       ; mov    AX ,    15872
-      ; mov    BX ,  [ hnd ]
-        mov    BX ,    hnd
-        mov    BX ,  [ BX ]
+      ; mov    SI ,  [ hnd ]
+        mov    SI ,    hnd
+        mov    BX ,  [ SI ]
         int    33              ; 0x21
 
         mov    AH ,    60      ; 0x3C
@@ -170,8 +170,8 @@ compile_end :
                                ; TODO   Check CF
 
       ; mov  [ hnd ] , AX
-      ; mov    BX ,    hnd
-      ; mov  [ BX ] ,  AX
+      ; mov    SI ,    hnd
+      ; mov  [ SI ] ,  AX
         mov    BX ,    AX
 
         mov    AH ,    64      ; 0x40
@@ -220,7 +220,7 @@ do_if :
 
         call   cond
 
-        push   BX              ; bypass jmp ofs
+        push   SI              ; bypass jmp ofs
 
         call   get_tok
         call   stmt
@@ -233,13 +233,13 @@ do_if :
         mov    DX ,    DI
         stosw                  ; Reserved for ofs
 
-        pop    BX
+        pop    SI
 
       ; mov    AX ,    DI
-      ; sub    AX ,    BX
+      ; sub    AX ,    SI
       ; dec    AX
       ; dec    AX
-      ; mov  [ BX ] ,  AX
+      ; mov  [ SI ] ,  AX
 
         call   patch
 
@@ -249,13 +249,13 @@ do_if :
         call   stmt
 
 no_else :
-        pop    BX
+        pop    SI
 
       ; mov    AX ,    DI
-      ; sub    AX ,    BX
+      ; sub    AX ,    SI
       ; dec    AX
       ; dec    AX
-      ; mov  [ BX ] ,  AX
+      ; mov  [ SI ] ,  AX
 
         call   patch
 
@@ -271,12 +271,12 @@ do_while :
 
         call   cond
 
-        push   BX              ; bypass jmp ofs
+        push   SI              ; bypass jmp ofs
 
         call   get_tok
         call   stmt
 
-        pop    BX
+        pop    SI
         pop    DX              ; while ofs
 
         mov    AL ,    233     ; jmp
@@ -288,10 +288,10 @@ do_while :
         stosw
 
       ; mov    AX ,    DI
-      ; sub    AX ,    BX
+      ; sub    AX ,    SI
       ; dec    AX
       ; dec    AX
-      ; mov  [ BX ] ,  AX
+      ; mov  [ SI ] ,  AX
 
         call   patch
 
@@ -307,8 +307,8 @@ do_asm :
         jne    do_db
 
         call   get_tok_2       ; offset Name
-        call   find_and_load   ; BX = Ofs
-        mov    AX ,    BX
+        call   find_and_load   ; SI = Ofs
+        mov    AX ,    SI
         stosw
 
       ; jmp    get_tok_2       ; INFO Error - find_and_load calls get_tok once
@@ -369,19 +369,19 @@ store_to_var :
         cmp    CX ,    43      ; Square bracket (opening)
         jne    store_to_simple_var
 
-        push   BX
+        push   SI
         push   DX
 
         call   get_tok         ; INFO Omitted
         call   expr
 
       ; pop    DX
-      ; pop    BX
+      ; pop    SI
 
         mov    AL ,    80      ; 0x50 push AX
         stosb
 
-      ; push   BX              ; TODO Extra push/pop
+      ; push   SI              ; TODO Extra push/pop
       ; push   DX
 
       ; call   get_tok         ; =
@@ -390,10 +390,10 @@ store_to_var :
         call   expr
 
         pop    DX
-        pop    BX
+        pop    SI
 
-      ; mov    AX ,    88      ; 0x58 pop  BX ; INFO Error
-        mov    AL ,    91      ; 0x5B pop  BX
+      ; mov    AX ,    88      ; 0x58 pop  SI ; INFO Error
+        mov    AL ,    91      ; 0x5B pop  SI
         stosb
 
         cmp    DX ,    1
@@ -402,19 +402,19 @@ store_to_var :
         stosw
 
 no_shift_1 :
-        mov    CX ,    135     ; 0x87 [BX+Ofs]
+        mov    CX ,    135     ; 0x87 [SI+Ofs]
 
         jmp    store_any
 
 store_to_simple_var :
-        push   BX
+        push   SI
         push   DX
 
         call   get_tok
         call   expr
 
         pop    DX
-        pop    BX
+        pop    SI
 
         mov    CX ,    6       ; [Ofs]
 
@@ -433,7 +433,7 @@ store_to_any_2 :
         stosb
 
       ; mov    AX ,    DX      ; INFO Error
-        mov    AX ,    BX
+        mov    AX ,    SI
         stosw
 
       ; call   get_tok
@@ -445,10 +445,10 @@ store_to_any_2 :
 
 patch :
         mov    AX ,    DI
-        sub    AX ,    BX
+        sub    AX ,    SI
         dec    AX
         dec    AX
-        mov  [ BX ] ,  AX
+        mov  [ SI ] ,  AX
 
         retn
 
@@ -467,16 +467,16 @@ cond :
         call   get_tok
         call   expr            ; CX = )
 
-      ; mov    AX ,    88      ; 0x58 pop  BX ; INFO Error
-        mov    AL ,    91      ; 0x5B pop  BX
+      ; mov    AX ,    88      ; 0x58 pop  SI ; INFO Error
+        mov    AL ,    91      ; 0x5B pop  SI
         stosb
 
         pop    CX
 
-        mov    BX ,    cond_tab
+        mov    SI ,    cond_tab
 
 cond_loop :
-        mov    AX ,  [ BX ]
+        mov    AX ,  [ SI ]
         or     AX ,    AX
         jne    cmp_cond_op
         jmp    halt
@@ -485,7 +485,7 @@ cmp_cond_op :
         cmp    AX ,    CX
         je     do_cond
 
-        add    BX ,    4
+        add    SI ,    4
 
         jmp    cond_loop
 
@@ -494,14 +494,14 @@ do_cond :
       ; stosb                  ; INFO Error
         stosw
 
-        inc    BX
-        inc    BX
-        mov    AX ,  [ BX ]    ; Opcode
+        inc    SI
+        inc    SI
+        mov    AX ,  [ SI ]    ; Opcode
         stosw
 
         mov    AL ,    233     ; jmp
         stosb
-        mov    BX ,    DI
+        mov    SI ,    DI
         stosw                  ; Reserved for ofs
 
         retn
@@ -510,10 +510,10 @@ do_cond :
 expr :
         call   operand
 
-        mov    BX ,    oper_tab
+        mov    SI ,    oper_tab
 
 oper_loop :
-        mov    AX ,  [ BX ]
+        mov    AX ,  [ SI ]
         or     AX ,    AX
         jne    cmp_oper
         retn
@@ -522,7 +522,7 @@ cmp_oper :
         cmp    AX ,    CX
         je     do_oper
 
-        add    BX ,    4
+        add    SI ,    4
 
       ; jmp    cond_loop       ; INFO Error
         jmp    oper_loop
@@ -531,29 +531,29 @@ do_oper :
         mov    AL ,    80      ; 0x50 push AX
         stosb
 
-        push   BX
+        push   SI
 
         call   get_tok
         call   operand
 
-        pop    BX
+        pop    SI
 
         push   CX              ; INFO Omitted
 
-        mov    AL ,    91      ; 0x5B pop  BX
+        mov    AL ,    91      ; 0x5B pop  SI
         stosb
 
-        mov    CX ,  [ BX ]    ; Oper
+        mov    CX ,  [ SI ]    ; Oper
 
-        inc    BX
-        inc    BX
-        mov    DX ,  [ BX ]    ; Opcode
+        inc    SI
+        inc    SI
+        mov    DX ,  [ SI ]    ; Opcode
 
-        mov    AL ,    147     ; 0x93 xchg AX, BX
+        mov    AL ,    147     ; 0x93 xchg AX, SI
         stosb
 
         mov    AX ,    53811   ; 0xD233 xor  DX, DX
-        cmp    DX ,    62455   ; 0xF3F7 div  BX
+        cmp    DX ,    62455   ; 0xF3F7 div  SI
         jne    not_div_mod
         stosw
 
@@ -603,7 +603,7 @@ load_var :
         mov    CX ,    6       ; [Ofs]
         jne    load_var_1
 
-        push   BX
+        push   SI
         push   DX
 
         call   get_tok         ; INFO Omitted
@@ -611,12 +611,12 @@ load_var :
         call   get_tok         ; INFO Omitted
 
         pop    DX
-        pop    BX
+        pop    SI
 
         pop    AX              ; FIXME Check and improve
         push   CX
 
-        mov    AL ,    147     ; 0x93 xchg AX, BX
+        mov    AL ,    147     ; 0x93 xchg AX, SI
         stosb
 
         cmp    DX ,    1
@@ -626,10 +626,10 @@ load_var :
         stosw                  ; INFO Omitted
 
 no_shift_2 :
-        mov    CX ,    135     ; 0x87 [BX+Ofs]
+        mov    CX ,    135     ; 0x87 [SI+Ofs]
 
 load_var_1 :
-      ; cmp    BX ,    1       ; INFO Error
+      ; cmp    SI ,    1       ; INFO Error
         cmp    DX ,    1
         jne    word_value
         mov    AX ,    58418   ; 0xE432 xor AH, AH
@@ -649,7 +649,7 @@ load_var_2 :
       ; stosw                  ; INFO Error
         stosb
 
-        mov    AX ,    BX      ; Ofs
+        mov    AX ,    SI      ; Ofs
         stosw
 
       ; call   get_tok         ; INFO Error
@@ -663,10 +663,10 @@ call_fn :
         mov    AL ,    232     ; 0xE8 call
         stosb
 
-        sub    BX ,    DI
-        dec    BX
-        dec    BX
-        mov    AX ,    BX
+        sub    SI ,    DI
+        dec    SI
+        dec    SI
+        mov    AX ,    SI
         stosw
 
       ; call   get_tok         ; Round bracket (closing)
@@ -680,43 +680,43 @@ call_fn :
 
 find_and_load :
         call   find_name
-        cmp    BX ,    SI
+        cmp    SI ,    BX
         jb     load_size_ofs
         jmp    halt
 
 load_size_ofs :
-        push   BX
+        push   SI
         call   get_tok
-        pop    BX
+        pop    SI
 
-        inc    BX
-        inc    BX
-        mov    DX ,  [ BX ]    ; Size
+        inc    SI
+        inc    SI
+        mov    DX ,  [ SI ]    ; Size
 
-        inc    BX
-        inc    BX
-        mov    BX ,  [ BX ]    ; Ofs
+        inc    SI
+        inc    SI
+        mov    SI ,  [ SI ]    ; Ofs
 
         retn
 
 
 find_name :
-        mov    BX ,    dict
+        mov    SI ,    dict
 
 find_name_loop :
-        cmp    BX ,    SI
+        cmp    SI ,    BX
         jb     compare
         retn
 
 compare :
-        mov    DX ,  [ BX ]
+        mov    DX ,  [ SI ]
         cmp    DX ,    CX
         jne    next_name
 
         retn
 
 next_name :
-        add    BX ,    6
+        add    SI ,    6
 
         jmp    find_name_loop
 
@@ -741,12 +741,12 @@ getc_ok :
 
 eol :
       ; mov    DX ,  [ lno ]
-        mov    BX ,    lno
-        mov    DX ,  [ BX ]
+        mov    SI ,    lno
+        mov    DX ,  [ SI ]
         inc    DX
       ; add    DX ,    1
       ; mov  [ lno ] , DX
-        mov  [ BX ] ,  DX
+        mov  [ SI ] ,  DX
 not_eol :
 
       ; cmp    AL ,    32
@@ -835,6 +835,7 @@ not_lf :
 
 
 getc :
+        push   BX              ; INFO Required after BX-SI roles swapped
         mov    AH ,     63     ; 0x3F
       ; mov    AX ,     16128
       ; mov    BX ,   [ hnd ]
@@ -843,14 +844,15 @@ getc :
         mov    CX ,     1
         mov    DX ,     buf
         int    33              ; 0x21
+        pop    BX
 
                                ; TODO   Check CF
 
         or     AX ,     AX
         je     eof
       ; mov    AL ,   [ buf]
-        mov    BX ,     buf
-        mov    AL ,   [ BX ]
+        mov    SI ,     buf
+        mov    AL ,   [ SI ]
 
       ; push   AX
       ; mov    DX ,     AX
@@ -864,8 +866,8 @@ eof :
 halt :
         call   newln
 
-        mov    BX ,     lno
-        mov    DX ,   [ BX ]
+        mov    SI ,     lno
+        mov    DX ,   [ SI ]
         call   info
 
         mov    AX ,     19456  ; 0x4C00
