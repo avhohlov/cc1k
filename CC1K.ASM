@@ -11,7 +11,7 @@
 
         org    256             ; 0x100
 
-      ; mov    AH ,    61      ; 0x3D
+      ; mov    AH ,    61      ; 0x3D ; Open file
       ; mov    AL ,    0
         mov    AX ,    15616
         mov    DX ,    src
@@ -168,41 +168,28 @@ compile_end :
         sub    AX ,    CX
         mov  [ SI ] ,  AX
 
-        mov    AH ,    62      ; 0x3E
-      ; mov    AX ,    15872
-      ; mov    SI ,  [ hnd ]
+        mov    AH ,    62      ; 0x3E ; Close file
+      ; mov    BX ,  [ hnd ]
         mov    SI ,    hnd
         mov    BX ,  [ SI ]
         int    33              ; 0x21
 
-        mov    AH ,    60      ; 0x3C
-      ; mov    AX ,    15360
+        mov    AH ,    60      ; 0x3C ; Create file
         mov    CX ,    0
         mov    DX ,    dst
         int    33              ; 0x21
 
                                ; TODO   Check CF
 
-      ; mov  [ hnd ] , AX
-      ; mov    SI ,    hnd
-      ; mov  [ SI ] ,  AX
-        mov    BX ,    AX
+        mov    BX ,    AX      ; hnd
 
-        mov    AH ,    64      ; 0x40
-      ; mov    AX ,    16384
-      ; mov    BX ,  [ hnd ]   ; TODO   mov    BX ,  pred AX
-      ; mov    BX ,    hnd
-      ; mov    BX ,  [ BX ]
+        mov    AH ,    64      ; 0x40 ; Write file
         mov    CX ,    DI
         mov    DX ,    code
         sub    CX ,    DX
         int    33              ; 0x21
 
-        mov    AH ,    62      ; 0x3E
-      ; mov    AX ,    15872
-      ; mov    BX ,  [ hnd ]
-      ; mov    BX ,    hnd
-      ; mov    BX ,  [ BX ]
+        mov    AH ,    62      ; 0x3E ; Close file
         int    33              ; 0x21
 
         retn
@@ -221,10 +208,6 @@ do_stmt :
 chk_blk_end :
         cmp    CX ,    77      ; Curly bracket (closing)
         jne    do_stmt
-
-      ; call   get_tok
-
-      ; retn
 
         jmp    get_tok
 
@@ -249,12 +232,6 @@ do_if :
 
         pop    SI
 
-      ; mov    AX ,    DI
-      ; sub    AX ,    SI
-      ; dec    AX
-      ; dec    AX
-      ; mov  [ SI ] ,  AX
-
         call   patch
 
         push   DX
@@ -264,12 +241,6 @@ do_if :
 
 no_else :
         pop    SI
-
-      ; mov    AX ,    DI
-      ; sub    AX ,    SI
-      ; dec    AX
-      ; dec    AX
-      ; mov  [ SI ] ,  AX
 
         call   patch
 
@@ -300,12 +271,6 @@ do_while :
         dec    DX
         mov    AX ,    DX
         stosw
-
-      ; mov    AX ,    DI
-      ; sub    AX ,    SI
-      ; dec    AX
-      ; dec    AX
-      ; mov  [ SI ] ,  AX
 
         call   patch
 
@@ -346,10 +311,6 @@ comma_cmp :
         cmp    CX ,    65532
         je     asm_loop
 
-      ; call   get_tok
-
-      ; retn
-
         jmp    get_tok
 
 do_return :
@@ -361,10 +322,6 @@ do_return :
 
         mov    AL ,    195     ; retn
         stosb
-
-      ; call   get_tok
-
-      ; retn
 
         jmp    get_tok
 
@@ -384,7 +341,6 @@ store_to_var :
         cmp    CX ,    43      ; Square bracket (opening)
         jne    store_to_simple_var
 
-      ; push   AX              ; Ofs
         push   DX              ; Size
 
         call   get_tok         ; INFO Omitted
@@ -398,9 +354,6 @@ store_to_var :
         call   get_tok_2
         call   expr
 
-      ; pop    DX
-      ; pop    SI
-
       ; mov    AX ,    88      ; 0x58 pop  SI ; INFO Error
         mov    AL ,    91      ; 0x5B pop  SI
         stosb
@@ -413,22 +366,17 @@ store_to_var :
         stosw
 
 no_shift_1 :
-      ; pop    SI              ; Ofs
-       
         mov    CX ,    135     ; 0x87 [SI+Ofs]
 
         jmp    store_any
 
 store_to_simple_var :
-      ; push   SI
-      ; push   AX
         push   DX
 
         call   get_tok
         call   expr
 
         pop    DX
-      ; pop    SI
 
         mov    CX ,    6       ; [Ofs]
 
@@ -450,10 +398,6 @@ store_to_any_2 :
       ; mov    AX ,    SI
         pop    AX              ; Ofs
         stosw
-
-      ; call   get_tok
-
-      ; retn
 
         jmp    get_tok
 
@@ -857,33 +801,6 @@ not_lf :
 
 
 getc :
-      ; push   BX              ; INFO Required after BX-SI roles swapped
-      ; mov    AH ,     63     ; 0x3F
-    ; ; mov    AX ,     16128
-    ; ; mov    BX ,   [ hnd ]
-      ; mov    BX ,     hnd
-      ; mov    BX ,   [ BX ]
-      ; mov    CX ,     1
-      ; mov    DX ,     buf
-      ; int    33              ; 0x21
-      ; pop    BX
-
-                               ; TODO   Check CF
-
-      ; or     AX ,     AX
-      ; je     eof
-    ; ; mov    AL ,   [ buf]
-      ; mov    SI ,     buf
-      ; mov    AL ,   [ SI ]
-
-    ; ; push   AX
-    ; ; mov    DX ,     AX
-    ; ; call   putc
-    ; ; pop    AX
-
-eof :
-    ;   retn
-
         mov    SI ,     nText
 
       ; mov    AX ,   [ SI ]
@@ -896,7 +813,7 @@ eof :
 
         push   BX
 
-        mov    AH ,     63     ; 0x3F
+        mov    AH ,     63     ; 0x3F ; Read file
         mov    BX ,     hnd
         mov    BX ,   [ BX ]
         mov    CX ,     1024
@@ -1067,4 +984,4 @@ dict :
         rw     3072            ; 6 * 512
 
 code :
-        rb     8192
+        rb     6912
