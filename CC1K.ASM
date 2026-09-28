@@ -33,18 +33,20 @@
         mov    DI ,    dsz
       ; mov  [ DI ] ,  AX
         stosw
+
         mov    AX ,    1
-      ; mov    DI ,    lno
+        mov    DI ,    lno
       ; mov  [ DI ] ,  AX      ; Line = 1
-        stosw                  ; lno must be immediately after dsz!
+        stosw
 
         sub    AX ,    AX
         mov    DI ,    nText
       ; mov  [ DI ] ,  AX
-        stosw                  ; [nText] = AX
-      ; mov    DI ,    pText
+        stosw                  ; [nText] = 0
+
+        mov    DI ,    pText
       ; mov  [ DI ] ,  AX
-        stosw                  ; [pText] = AX, pText must be immediately after nText!
+        stosw                  ; [pText] = 0
 
         mov    BX ,    dict    ; nDict
         mov    DI ,    code    ; nCode
@@ -319,8 +321,7 @@ do_asm :
         jne    do_db
 
         call   get_tok_2       ; offset Name
-        call   find_and_load   ; SI = Ofs
-        mov    AX ,    SI
+        call   find_and_load   ; AX = Ofs
         stosw
 
       ; jmp    get_tok_2       ; INFO Error - find_and_load calls get_tok once
@@ -378,35 +379,33 @@ do_assign :
         jmp    get_tok
 
 store_to_var :
+        push   AX              ; Ofs
+
         cmp    CX ,    43      ; Square bracket (opening)
         jne    store_to_simple_var
 
-        push   SI
-        push   DX
+      ; push   AX              ; Ofs
+        push   DX              ; Size
 
         call   get_tok         ; INFO Omitted
         call   expr
 
-      ; pop    DX
-      ; pop    SI
-
         mov    AL ,    80      ; 0x50 push AX
         stosb
-
-      ; push   SI              ; TODO Extra push/pop
-      ; push   DX
 
       ; call   get_tok         ; =
       ; call   get_tok
         call   get_tok_2
         call   expr
 
-        pop    DX
-        pop    SI
+      ; pop    DX
+      ; pop    SI
 
       ; mov    AX ,    88      ; 0x58 pop  SI ; INFO Error
         mov    AL ,    91      ; 0x5B pop  SI
         stosb
+
+        pop    DX
 
         cmp    DX ,    1
         je     no_shift_1
@@ -414,19 +413,22 @@ store_to_var :
         stosw
 
 no_shift_1 :
+      ; pop    SI              ; Ofs
+       
         mov    CX ,    135     ; 0x87 [SI+Ofs]
 
         jmp    store_any
 
 store_to_simple_var :
-        push   SI
+      ; push   SI
+      ; push   AX
         push   DX
 
         call   get_tok
         call   expr
 
         pop    DX
-        pop    SI
+      ; pop    SI
 
         mov    CX ,    6       ; [Ofs]
 
@@ -445,7 +447,8 @@ store_to_any_2 :
         stosb
 
       ; mov    AX ,    DX      ; INFO Error
-        mov    AX ,    SI
+      ; mov    AX ,    SI
+        pop    AX              ; Ofs
         stosw
 
       ; call   get_tok
@@ -607,27 +610,29 @@ var_or_fn :
         jmp    call_fn
 
 load_var :
+        push   AX              ; Ofs
         push   CX              ; INFO Omitted
 
         cmp    CX ,    43      ; Square bracket (opening)
-        mov    CX ,    6       ; [Ofs]
+        mov    CX ,    6       ; mod-reg-r/m = [Ofs]
         jne    load_var_1
 
-        push   SI
+        pop    CX              ; Discard next token
+
+      ; push   AX
         push   DX
 
         call   get_tok         ; INFO Omitted
         call   operand
         call   get_tok         ; INFO Omitted
 
-        pop    DX
-        pop    SI
-
-        pop    AX              ; FIXME Check and improve
-        push   CX
-
-        mov    AL ,    147     ; 0x93 xchg AX, SI
+        mov    AL ,    147     ; 0x93 xchg AX, BX
         stosb
+
+        pop    DX              ; Size
+      ; pop    SI              ; Ofs
+
+        push   CX
 
         cmp    DX ,    1
       ; jne    no_shift_2      ; INFO Error
@@ -636,40 +641,40 @@ load_var :
         stosw                  ; INFO Omitted
 
 no_shift_2 :
-        mov    CX ,    135     ; 0x87 [SI+Ofs]
+        mov    CX ,    135     ; 0x87 ; mod-reg-r/m = [BX+Ofs]
 
 load_var_1 :
+        mov    AL ,    139     ; 0x8B
       ; cmp    SI ,    1       ; INFO Error
         cmp    DX ,    1
-        jne    word_value
+        jne    load_var_2
         mov    AX ,    58418   ; 0xE432 xor AH, AH
         stosw
-
-word_value :
-        mov    AX ,    138     ; 0x8A
-        cmp    DX ,    1
-      ; jne    load_var_2      ; INFO Error
-        je     load_var_2
-        inc    AX
+        mov    AL ,    138     ; 0x8A
 
 load_var_2 :
         stosb
 
-        mov    AX ,    CX      ; mod-reg-rm
+        mov    AX ,    CX      ; mod-reg-r/m
       ; stosw                  ; INFO Error
         stosb
 
-        mov    AX ,    SI      ; Ofs
+        pop    CX
+
+      ; mov    AX ,    SI      ; Ofs
+        pop    AX              ; Ofs
         stosw
 
       ; call   get_tok         ; INFO Error
 
-        pop    CX              ; INFO Omitted
+      ; pop    CX              ; INFO Omitted
 
         retn
 
 
 call_fn :
+        mov    SI,     AX      ; Ofs in AX only
+
         mov    AL ,    232     ; 0xE8 call
         stosb
 
@@ -709,7 +714,6 @@ load_size_ofs :
       ; inc    SI
       ; mov    SI ,  [ SI ]    ; Ofs
         lodsw
-        mov    SI,     AX
 
         retn
 
@@ -884,7 +888,9 @@ eof :
 
       ; mov    AX ,   [ SI ]
         lodsw
-        mov    DX ,   [ SI ]   ; DX = [pText], pText must be immediately after nText!
+
+        mov    SI,      pText
+        mov    DX ,   [ SI ]
         cmp    DX ,     AX
         jb     ready
 
