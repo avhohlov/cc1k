@@ -617,7 +617,7 @@ load_var_2 :
 
 
 call_fn :
-        mov    SI,     AX      ; Ofs in AX only
+        mov    SI ,    AX      ; Ofs in AX only
 
         mov    AL ,    232     ; 0xE8 call
         stosb
@@ -806,7 +806,7 @@ getc :
       ; mov    AX ,   [ SI ]
         lodsw
 
-        mov    SI,      pText
+        mov    SI ,     pText
         mov    DX ,   [ SI ]
         cmp    DX ,     AX
         jb     ready
@@ -832,7 +832,7 @@ getc :
         jae    set_ptext
 
 ready :
-        mov    SI,      text
+        mov    SI ,     text
         add    SI ,     DX
         sub    AX ,     AX     ; FIXME
       ; mov    AL ,   [ SI ]
