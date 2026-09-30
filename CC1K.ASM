@@ -17,14 +17,17 @@
         mov    DX ,    src
         int    33              ; 0x21
 
-                               ; TODO   Check CF
+        jnc    start
+        jmp    halt
 
+start :
         cld
 
-      ; mov  [ hnd ] , AX
-        mov    DI ,    hnd
-      ; mov  [ DI ] ,  AX
-        stosw
+    ; ; mov  [ hnd ] , AX
+      ; mov    DI ,    hnd
+    ; ; mov  [ DI ] ,  AX
+      ; stosw
+        mov    BX,     AX      ; File handle
          
                                ; Compiling
       ; mov    AX ,    16640   ; INFO Depend on compiled program code size - see C.C/AssignOfs()
@@ -48,7 +51,7 @@
       ; mov  [ DI ] ,  AX
         stosw                  ; [pText] = 0
 
-        mov    BX ,    dict    ; nDict
+        mov    BP ,    dict    ; nDict
         mov    DI ,    code    ; nCode
 
         mov    AL ,    233     ; jmp
@@ -74,7 +77,7 @@ char_type :
         push   CX
 
         call   find_name
-        cmp    SI ,    BX
+        cmp    SI ,    BP
         jae    new_name
         jmp    halt
 
@@ -82,14 +85,14 @@ new_name :
         call   get_tok         ; Semicolon / square bracket / round bracket
 
         pop    DX              ; Name
-        mov  [ BX ] ,  DX
-        inc    BX
-        inc    BX
+        mov  [ BP ] ,  DX
+        inc    BP
+        inc    BP
 
         pop    AX              ; Size
-        mov  [ BX ] ,  AX
-        inc    BX
-        inc    BX
+        mov  [ BP ] ,  AX
+        inc    BP
+        inc    BP
 
         cmp    CX ,    65528   ; Round bracket (opening)
         jne    add_var
@@ -114,9 +117,9 @@ simple_var :
         mov    SI ,    dsz
         mov    DX ,  [ SI ]
 
-        mov  [ BX ] ,  DX      ; Data offset
-        inc    BX
-        inc    BX
+        mov  [ BP ] ,  DX      ; Data offset
+        inc    BP
+        inc    BP
 
         mov    CX ,    AX
         and    CX ,    1
@@ -135,17 +138,17 @@ compile_fn :
         push   DX              ; Name
         push   DI              ; Code offset
 
-        mov  [ BX ] ,  DI      ; Code offset
-        inc    BX
-        inc    BX
+        mov  [ BP ] ,  DI      ; Code offset
+        inc    BP
+        inc    BP
 
       ; call   get_tok         ; void
       ; call   get_tok         ; Round bracket (closing)
         call   get_tok_2
         call   get_tok
-      ; cmp    CX ,    75      ; Curly bracket (opening)
-      ; je     process_stmt
-      ; jmp    halt
+        cmp    CX ,    75      ; Curly bracket (opening)
+        je     process_stmt
+        jmp    halt
 
 process_stmt :
         call   stmt            ; Next token available
@@ -169,9 +172,9 @@ compile_end :
         mov  [ SI ] ,  AX
 
         mov    AH ,    62      ; 0x3E ; Close file
-      ; mov    BX ,  [ hnd ]
-        mov    SI ,    hnd
-        mov    BX ,  [ SI ]
+    ; ; mov    BX ,  [ hnd ]
+      ; mov    SI ,    hnd
+      ; mov    BX ,  [ SI ]
         int    33              ; 0x21
 
         mov    AH ,    60      ; 0x3C ; Create file
@@ -179,9 +182,11 @@ compile_end :
         mov    DX ,    dst
         int    33              ; 0x21
 
-                               ; TODO   Check CF
+      ; jnc    write
+      ; jmp    halt
 
-        mov    BX ,    AX      ; hnd
+write:
+        mov    BX ,    AX      ; File handle
 
         mov    AH ,    64      ; 0x40 ; Write file
         mov    CX ,    DI
@@ -639,7 +644,7 @@ call_fn :
 
 find_and_load :
         call   find_name
-        cmp    SI ,    BX
+        cmp    SI ,    BP
         jb     load_size_ofs
         jmp    halt
 
@@ -666,7 +671,7 @@ find_name :
         mov    SI ,    dict
 
 find_name_loop :
-        cmp    SI ,    BX
+        cmp    SI ,    BP
         jb     compare
         retn
 
@@ -811,16 +816,16 @@ getc :
         cmp    DX ,     AX
         jb     ready
 
-        push   BX
+      ; push   BX
 
         mov    AH ,     63     ; 0x3F ; Read file
-        mov    BX ,     hnd
-        mov    BX ,   [ BX ]
+      ; mov    BX ,     hnd
+      ; mov    BX ,   [ BX ]
         mov    CX ,     1024
         mov    DX ,     text
         int    33              ; 0x21
 
-        pop    BX
+      ; pop    BX
 
                                ; TODO   Check CF
 
@@ -958,10 +963,7 @@ dst :
         db     0
 
 hnd :
-        rw     1
-
-buf :
-      ; rw     1               ; TODO rb?
+      ; rw     1
 
 text :
         rb     1024
