@@ -11,25 +11,8 @@
 
         org    256             ; 0x100
 
-      ; mov    AH ,    61      ; 0x3D ; Open file
-      ; mov    AL ,    0
-        mov    AX ,    15616
-        mov    DX ,    src
-        int    33              ; 0x21
-
-        jnc    start
-        jmp    halt
-
-start :
         cld
 
-    ; ; mov  [ hnd ] , AX
-      ; mov    DI ,    hnd
-    ; ; mov  [ DI ] ,  AX
-      ; stosw
-        mov    BX,     AX      ; File handle
-         
-                               ; Compiling
       ; mov    AX ,    16640   ; INFO Depend on compiled program code size - see C.C/AssignOfs()
       ; mov    AX ,    6144    ; FIXME Error - code and data overlap
         mov    AX ,    7168
@@ -51,6 +34,22 @@ start :
       ; mov  [ DI ] ,  AX
         stosw                  ; [pText] = 0
 
+      ; mov    AH ,    61      ; 0x3D ; Open file
+      ; mov    AL ,    0
+        mov    AX ,    15616
+        mov    DX ,    src
+        int    33              ; 0x21
+
+        jnc    start
+        jmp    halt
+
+start :
+    ; ; mov  [ hnd ] , AX
+      ; mov    DI ,    hnd
+    ; ; mov  [ DI ] ,  AX
+      ; stosw
+        mov    BX,     AX      ; File handle
+         
         mov    BP ,    dict    ; nDict
         mov    DI ,    code    ; nCode
 
