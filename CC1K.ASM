@@ -48,7 +48,7 @@ start :
       ; mov    DI ,    hnd
     ; ; mov  [ DI ] ,  AX
       ; stosw
-        mov    BX,     AX      ; File handle
+        mov    BX ,    AX      ; File handle
          
         mov    BP ,    dict    ; nDict
         mov    DI ,    code    ; nCode
