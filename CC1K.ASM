@@ -184,7 +184,7 @@ compile_end :
       ; jnc    write
       ; jmp    halt
 
-write:
+write :
         mov    BX ,    AX      ; File handle
 
         mov    AH ,    64      ; 0x40 ; Write file
