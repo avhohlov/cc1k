@@ -95,7 +95,7 @@ new_name :
 
         cmp    CX ,    65528   ; Round bracket (opening)
         jne    add_var
-        jmp    compile_fn
+        jmp    short   compile_fn
 
 add_var :
         cmp    CX ,    43      ; Square bracket (opening)
@@ -131,7 +131,7 @@ align_2 :
 
         call   get_tok
 
-        jmp    compile
+        jmp    short   compile
 
 compile_fn :
         push   DX              ; Name
@@ -204,7 +204,7 @@ stmt :
         jne    do_if
 
         call   get_tok
-        jmp    chk_blk_end
+        jmp    short   chk_blk_end
 
 do_stmt :
         call   stmt
@@ -302,7 +302,7 @@ do_asm :
 
 do_db :
         mov    CX ,    65532   ; ,
-        jmp    comma_cmp
+        jmp    short   comma_cmp
 
 asm_loop :
         call   get_tok
@@ -372,7 +372,7 @@ store_to_var :
 no_shift_1 :
         mov    CX ,    135     ; 0x87 [SI+Ofs]
 
-        jmp    store_any
+        jmp    short   store_any
 
 store_to_simple_var :
         push   DX
@@ -452,7 +452,7 @@ cmp_cond_op :
       ; add    SI ,    4
         lodsw
 
-        jmp    cond_loop
+        jmp    short   cond_loop
 
 do_cond :
         mov    AX ,    55355   ; 0xD83B  cmp  BX, AX
@@ -491,7 +491,7 @@ cmp_oper :
         lodsw
 
       ; jmp    cond_loop       ; INFO Error
-        jmp    oper_loop
+        jmp    short   oper_loop
 
 do_oper :
         mov    AL ,    80      ; 0x50 push AX
@@ -555,7 +555,7 @@ var_or_fn :
         cmp    CX ,    65528   ; Round bracket (opening)
         jne    load_var
 
-        jmp    call_fn
+        jmp    short   call_fn
 
 load_var :
         push   AX              ; Ofs
@@ -688,7 +688,7 @@ next_name :
         lodsw
         lodsw
 
-        jmp    find_name_loop
+        jmp    short   find_name_loop
 
 
 get_tok_2 :
@@ -792,16 +792,16 @@ remark :
 
         or     AX ,    AX
         jne    not_eof
-        jmp    get_tok
+        jmp    short   get_tok
 
 not_eof :
         cmp    AX ,    10
         jne    remark
 
-        jmp    eol
+        jmp    short   eol
 
 not_lf :
-        jmp    get_tok
+        jmp    short   get_tok
 
 
 getc :
