@@ -547,7 +547,7 @@ operand :
 
       ; retn
 
-        jmp    get_tok
+        jmp    short   get_tok
 
 var_or_fn :
         call   find_and_load
@@ -638,7 +638,7 @@ call_fn :
 
       ; retn
 
-        jmp    get_tok_2
+        jmp    short   get_tok_2
 
 
 find_and_load :
