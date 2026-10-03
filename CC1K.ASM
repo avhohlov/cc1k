@@ -7,6 +7,9 @@
       ;    with the same decimal constants
       ; 3. May be need to change data offset (dsz initial value)
       ;
+      ; Source file name      C.ASM
+      ; Destination file name C.COM
+      ;
       ; (C) Andrei V. Khokhlov
 
         org    256             ; 0x100

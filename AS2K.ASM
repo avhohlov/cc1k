@@ -1,3 +1,11 @@
+      ; Simplified 8086/88 assembler.
+      ; May compile itself and CC1K.ASM
+      ;
+      ; Source file name      A.ASM
+      ; Destination file name A.COM
+      ;
+      ; (C) Andrei V. Khokhlov
+
         org    256             ; 0x100
 
       ; mov    AH ,    61      ; 0x3D
