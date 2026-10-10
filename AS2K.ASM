@@ -901,6 +901,18 @@ process_db :
 
 process_dw :
         call   get_tok
+
+        mov    BX ,    nf
+        mov    AX ,  [ BX ]
+        or     AX ,    AX
+        jne    num
+
+        mov    AX ,    1
+        call   find_lbl
+        mov    AX ,    4       ; Absolute ofs
+        jmp    add_ref
+
+num :
       ; mov  [ DI ] ,  CX
       ; inc    DI
       ; inc    DI
