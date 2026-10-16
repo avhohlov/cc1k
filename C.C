@@ -52,6 +52,8 @@ unsigned  create ( void )
 {
   asm db       180 ,   60 ;               // asm db     0xB4 , 0x3C ;               // mov  AH, 0x3C
   asm db       185 ,    0 ,    0 ;        // asm db     0xB9 , 0x00 , 0x00 ;        // mov  AL, 0
+// INFO Omitted
+  asm db       185 ,    0 ,    0 ;        // asm db     0xB9, 0x00, 0x00 ;          // mov  CX, 0
 // asm db      186 ,   76 ,  220 ;        // asm db     0xBA , 0x4C , 0xDC ;        // mov  DX, &Heap[66]
   asm db       186 ;                      // asm db     0xBA ;                      // mov  DX, &Heap
   asm dw       offset   Heap ;
