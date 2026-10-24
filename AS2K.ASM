@@ -1247,46 +1247,46 @@ not_lf :
 
 
 getc :
-        mov    BX ,     nText
-        mov    AX ,   [ BX ]
-        mov    BX ,     pText
-        mov    BX ,   [ BX ]
-        cmp    BX ,     AX
+        mov    BX ,    nText
+        mov    AX ,  [ BX ]
+        mov    BX ,    pText
+        mov    BX ,  [ BX ]
+        cmp    BX ,    AX
         jb     ready
 
-      ; mov    AH ,     63     ; 0x3F
-        mov    AX ,     16128
-        mov    BX ,     hnd
-        mov    BX ,   [ BX ]
-        mov    CX ,     1024
-        mov    DX ,     text
+      ; mov    AH ,    63      ; 0x3F
+        mov    AX ,    16128
+        mov    BX ,    hnd
+        mov    BX ,  [ BX ]
+        mov    CX ,    1024
+        mov    DX ,    text
         int    33              ; 0x21
 
                                ; TODO   Check CF
 
-        mov    BX ,     nText
-        mov  [ BX ] ,   AX
-        sub    CX ,     CX
-        mov    BX ,     pText
-        mov    DX ,     BX
-        mov  [ BX ] ,   CX
-        mov    BX ,     CX
+        mov    BX ,    nText
+        mov  [ BX ] ,  AX
+        sub    CX ,    CX
+        mov    BX ,    pText
+        mov    DX ,    BX
+        mov  [ BX ] ,  CX
+        mov    BX ,    CX
 
-        cmp    BX ,     AX
+        cmp    BX ,    AX
         jb     ready
         retn                   ; AX = 0
 
 ready :
-        mov    DX ,     BX
-        add    BX ,     text
-        sub    AX ,     AX     ; FIXME
-        mov    AL ,   [ BX ]
+        mov    DX ,    BX
+        add    BX ,    text
+        sub    AX ,    AX      ; FIXME
+        mov    AL ,  [ BX ]
         inc    DX
-        mov    BX ,     pText
-        mov  [ BX ] ,   DX
+        mov    BX ,    pText
+        mov  [ BX ] ,  DX
 
         push   AX
-        mov    DX ,     AX
+        mov    DX ,    AX
         call   putc
         pop    AX
 
@@ -1296,19 +1296,19 @@ ready :
 halt :
         call   newln
 
-        mov    BX ,     lno
-      ; mov    CX ,   [ BX ]   ; FIXME Remove dup function
+        mov    BX ,    lno
+      ; mov    CX ,  [ BX ]    ; FIXME Remove dup function
       ; call   info_ini
-        mov    DX ,   [ BX ]
+        mov    DX ,  [ BX ]
         call   info
 
-        mov    AX ,     19456  ; 0x4C00
+        mov    AX ,    19456   ; 0x4C00
         int    33              ; 0x21
 
 newln :
-        mov    DX ,     13
+        mov    DX ,    13
         call   putc
-        mov    DX ,     10
+        mov    DX ,    10
         call   putc
 
         retn
@@ -1316,22 +1316,22 @@ newln :
 
                                ; CX - number to print
 info_ini :
-      ; cmp    CX ,     10
+      ; cmp    CX ,    10
       ; jb     ini_put_char
 
-      ; mov    AX ,     CX
-      ; sub    DX ,     DX
-      ; mov    CX ,     10
+      ; mov    AX ,    CX
+      ; sub    DX ,    DX
+      ; mov    CX ,    10
       ; div    CX
-      ; mov    CX ,     AX
+      ; mov    CX ,    AX
 
       ; push   DX
       ; call   info_ini
       ; pop    CX
 
 ini_put_char :
-      ; mov    DX ,     CX
-      ; add    DX ,     48
+      ; mov    DX ,    CX
+      ; add    DX ,    48
 
       ; call   putc
 
@@ -1339,27 +1339,27 @@ ini_put_char :
 
                                ; DX - number to print
 info :
-        mov    AX ,     DX
-        sub    DX ,     DX
-        mov    CX ,     10
+        mov    AX ,    DX
+        sub    DX ,    DX
+        mov    CX ,    10
         div    CX
-        or     AX ,     AX
+        or     AX ,    AX
         je     put_char
 
         push   DX
-        mov    DX ,     AX
+        mov    DX ,    AX
         call   info
         pop    DX
 
 put_char :
-        add    DX ,     48
+        add    DX ,    48
         call   putc
 
         retn
 
 
 putc :                         ; DL = char
-        mov    AX ,     512    ; AH = 2
+        mov    AX ,    512     ; AH = 2
         int    33
 
         retn
