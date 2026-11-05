@@ -51,7 +51,8 @@ unsigned  open ( void )
 unsigned  create ( void )
 {
   asm db       180 ,   60 ;               // asm db     0xB4 , 0x3C ;               // mov  AH, 0x3C
-  asm db       185 ,    0 ,    0 ;        // asm db     0xB9 , 0x00 , 0x00 ;        // mov  AL, 0
+// INFO Wrong comment
+// asm db       185 ,    0 ,    0 ;        // asm db     0xB9 , 0x00 , 0x00 ;        // mov  AL, 0
 // INFO Omitted
   asm db       185 ,    0 ,    0 ;        // asm db     0xB9, 0x00, 0x00 ;          // mov  CX, 0
 // asm db      186 ,   76 ,  220 ;        // asm db     0xBA , 0x4C , 0xDC ;        // mov  DX, &Heap[66]
@@ -66,7 +67,7 @@ unsigned  read ( void )
 {
   asm db       180 ,   63 ;               // asm db     0xB4 , 0x3F ;               // mov  AH, 0x3F
 // asm db      139 ,   30 ,    8 ,  220 ; // asm db     0x8B , 0x1E , 0x08 , 0xDC ; // mov  BX, hFile
-  asm db       139 ,   30 ;               // asm db     0x8B , 0x1E ;               // mov  BX, hFile         
+  asm db       139 ,   30 ;               // asm db     0x8B , 0x1E ;               // mov  BX, hFile
   asm dw       offset   hFile ;
   asm db       185 ,    0 ,    4 ;        // asm db     0xB9 , 0x00 , 0x04 ;        // mov  CX, 1024
 // asm db      186 ,    0 ,   24 ;        // asm db     0xBA , 0x00 , 0x18 ;        // mov  DX, &Text
@@ -80,7 +81,7 @@ unsigned  write ( void )
 {
   asm db       180 ,   64 ;               // asm db     0xB4 , 0x40 ;               // mov  AH, 0x40
 // asm db      139 ,   30 ,    8 ,  220 ; // asm db     0x8B , 0x1E , 0x08 , 0xDC ; // mov  BX, hFile
-  asm db       139 ,   30 ;               // asm db     0x8B , 0x1E ;               // mov  BX, hFile         
+  asm db       139 ,   30 ;               // asm db     0x8B , 0x1E ;               // mov  BX, hFile
   asm dw       offset   hFile ;
 // asm db      139 ,   14 ,    6 ,  220 ; // asm db     0x8B , 0x0E , 0x06 , 0xDC ; // mov  CX, nCode
   asm db       139 ,   14 ;               // asm db     0x8B , 0x0E ;               // mov  CX, nCode
@@ -96,7 +97,7 @@ unsigned  close ( void )
 {
   asm db       180 ,   62 ;               // asm db     0xB4 , 0x3E ;               // mov  AH, 0x3E
 // asm db      139 ,   30 ,    8 ,  220 ; // asm db     0x8B , 0x1E , 0x08 , 0xDC ; // mov  BX, hFile
-  asm db       139 ,   30 ;               // asm db     0x8B , 0x1E ;               // mov  BX, hFile         
+  asm db       139 ,   30 ;               // asm db     0x8B , 0x1E ;               // mov  BX, hFile
   asm dw       offset   hFile ;
   asm db       205 ,   33 ;               // asm db     0xCD , 0x21 ;               // int  0x21
 }
