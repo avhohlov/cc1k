@@ -1,0 +1,1026 @@
+// Pseudo C compiler based on initial version of Tiny Context compiler (http://avhohlov.narod.ru/p1805en.htm)
+// To compile with gcc or bcc32 replace all functions from open() to halt() with #include "C.INC"
+// and change main() function return type to int
+//
+// Modified and reformatted for compatibility with cc1k
+//
+// (C) Andrei V. Khokhlov
+
+char  Text  [  1024 ] ;
+word pText ;
+word nText ;
+word nLine ;
+
+byte  Code  [ 49152 ] ;
+word nCode ;
+
+word hFile ;
+
+char  Heap  [  2048 ] ;
+word pHeap ;
+word nHeap ;
+
+word nData ;
+
+word  Name  [   128 ] ;
+word  Cls   [   128 ] ;
+word  Type  [   128 ] ;
+word  Size  [   128 ] ;
+word  Ofs   [   128 ] ;
+word pName ;
+word nName ;
+
+word  Stk   [    32 ] ;
+word pStk ;
+
+char  Buff  [   256 ] ;
+word pBuff ;
+
+
+word  open ( )
+// mov  AH, 0x3D
+  asm db       180 ,   61
+// mov  AL, 0
+  asm db       176 ,    0
+// mov  DX, &Heap
+  asm db       186
+// dw       offset   Heap ;
+  asm db        10,   196
+// add  DX, 62
+  asm db       131 ,  194 ,   62
+// int  0x21
+  asm db       205 ,   33
+end
+
+
+word  create ( )
+// mov  AH, 0x3C
+  asm db       180 ,   60
+// mov  CX, 0
+  asm db       185 ,    0 ,    0
+// mov  DX, &Heap
+  asm db       186
+// dw       offset   Heap ;
+  asm db        10,   196
+// add  DX, 66
+  asm db       131 ,  194 ,   66
+// int  0x21
+  asm db       205 ,   33
+end
+
+
+word  read ( )
+// mov  AH, 0x3F
+  asm db       180 ,   63
+// mov  BX, hFile
+  asm db       139 ,   30
+// dw       offset   hFile ;
+  asm db         8 ,  196
+// mov  CX, 1024
+  asm db       185 ,    0 ,    4
+// mov  DX, &Text
+  asm db       186
+// dw       offset   Text ;
+  asm  db        0,     0
+// int  0x21
+  asm db       205 ,   33
+end
+
+
+word  write ( )
+// mov  AH, 0x40
+  asm db       180 ,   64
+// mov  BX, hFile
+  asm db       139 ,   30
+// dw       offset   hFile ;
+  asm db         8 ,  196
+// mov  CX, nCode
+  asm db       139 ,   14
+// dw       offset   nCode ;
+  asm db         6 ,  196
+// mov  DX, &Code
+  asm db       186
+// dw       offset   Code ;
+  asm db         6 ,    4
+// int  0x21
+  asm db       205 ,   33
+end
+
+
+word  close ( )
+// mov  AH, 0x3E
+  asm db       180 ,   62
+// mov  BX, hFile
+  asm db       139 ,   30
+// dw       offset   hFile ;
+  asm db         8 ,  196
+// int  0x21
+  asm db       205 ,   33
+end
+
+
+// char      Ch;                          // INFO Space omitted!
+// char      Chr ;
+word         Chr ;
+
+char      putchr ( )
+// xchg DX, AX
+  asm db       146
+// mov  AH, 0x02
+  asm db       180 ,    2
+// int  0x21
+  asm db       205 ,   33
+end
+
+
+word  halt ( )
+// mov  AX, 0x4C00
+  asm db       184 ,    0 ,   76
+// int  0x21
+  asm db       205 ,   33
+end
+
+
+word CharToWord ( char Ch )
+  asm db      08AH, 086H, 004H, 000H
+  asm db      032H, 0E4H
+end
+
+
+word ByteToWord ( byte B )
+  asm db      08AH, 086H, 004H, 000H
+  asm db      032H, 0E4H
+end
+
+
+word  Init ( )
+  Heap [  0 ] = '0' ;
+  Heap [  1 ] = '1' ;
+  Heap [  2 ] = '2' ;
+  Heap [  3 ] = '3' ;
+  Heap [  4 ] = '4' ;
+  Heap [  5 ] = '5' ;
+  Heap [  6 ] = '6' ;
+  Heap [  7 ] = '7' ;
+  Heap [  8 ] = '8' ;
+  Heap [  9 ] = '9' ;
+  Heap [ 10 ] = 'A' ;
+  Heap [ 11 ] = 'B' ;
+  Heap [ 12 ] = 'C' ;
+  Heap [ 13 ] = 'D' ;
+  Heap [ 14 ] = 'E' ;
+  Heap [ 15 ] = 'F' ;
+
+  Heap [ 16 ] = 'c' ;
+  Heap [ 17 ] = 'h' ;
+  Heap [ 18 ] = 'a' ;
+  Heap [ 19 ] = 'r' ;
+  Heap [ 20 ] =  #0 ;
+
+  Heap [ 21 ] = 'u' ;
+  Heap [ 22 ] = 'n' ;
+  Heap [ 23 ] = 's' ;
+  Heap [ 24 ] = 'i' ;
+  Heap [ 25 ] = 'g' ;
+  Heap [ 26 ] = 'n' ;
+  Heap [ 27 ] = 'e' ;
+  Heap [ 28 ] = 'd' ;
+  Heap [ 29 ] =  #0 ;
+
+  Heap [ 30 ] = '{' ;
+  Heap [ 31 ] =  #0 ;
+
+  Heap [ 32 ] = 'i' ;
+  Heap [ 33 ] = 'f' ;
+  Heap [ 34 ] =  #0 ;
+
+  Heap [ 35 ] = 'e' ;
+  Heap [ 36 ] = 'l' ;
+  Heap [ 37 ] = 's' ;
+  Heap [ 38 ] = 'e' ;
+  Heap [ 39 ] =  #0 ;
+
+  Heap [ 40 ] = 'w' ;
+  Heap [ 41 ] = 'h' ;
+  Heap [ 42 ] = 'i' ;
+  Heap [ 43 ] = 'l' ;
+  Heap [ 44 ] = 'e' ;
+  Heap [ 45 ] =  #0 ;
+
+  Heap [ 46 ] = 'a' ;
+  Heap [ 47 ] = 's' ;
+  Heap [ 48 ] = 'm' ;
+  Heap [ 49 ] =  #0 ;
+
+  Heap [ 50 ] = 'r' ;
+  Heap [ 51 ] = 'e' ;
+  Heap [ 52 ] = 't' ;
+  Heap [ 53 ] = 'u' ;
+  Heap [ 54 ] = 'r' ;
+  Heap [ 55 ] = 'n' ;
+  Heap [ 56 ] =  #0 ;
+
+  Heap [ 57 ] = 'm' ;
+  Heap [ 58 ] = 'a' ;
+  Heap [ 59 ] = 'i' ;
+  Heap [ 60 ] = 'n' ;
+  Heap [ 61 ] =  #0 ;
+
+  Heap [ 62 ] = 'C' ;
+  Heap [ 63 ] = '.' ;
+  Heap [ 64 ] = 'C' ;
+  Heap [ 65 ] =  #0 ;
+
+  Heap [ 66 ] = 'C' ;
+  Heap [ 67 ] = '.' ;
+  Heap [ 68 ] = 'C' ;
+  Heap [ 69 ] = 'O' ;
+  Heap [ 70 ] = 'M' ;
+  Heap [ 71 ] =  #0 ;
+
+  nHeap = 72 ;
+
+  Name [  0 ] =  16 ;
+  Cls  [  0 ] =  1 ;
+  Size [  0 ] =  1 ;
+
+  Name [  1 ] =  21 ;
+  Cls  [  1 ] =  1 ;
+  Size [  1 ] =  2 ;
+
+  Name [  2 ] =  30 ;                     // {
+  Cls  [  2 ] =  0 ;
+
+  Name [  3 ] =  32 ;                     // if
+  Cls  [  3 ] =  0 ;
+
+  Name [  4 ] =  40 ;                     // while
+  Cls  [  4 ] =  0 ;
+
+  Name [  5 ] =  46 ;                     // asm
+  Cls  [  5 ] =  0 ;
+
+  Name [  6 ] =  50 ;                     // return
+  Cls  [  6 ] =  0 ;
+
+  nName = 7 ;
+
+  pStk  = 0 ;
+  nCode = 0 ;
+end
+
+
+word  I ;
+
+word  Push ( )
+  Stk [ pStk ] = I ;
+  pStk = pStk + 1 ;
+end
+
+
+word  Pop  ( )
+  pStk = pStk - 1 ;
+  return Stk [ pStk ] ;
+end
+
+
+word  Stop ( )
+  pStk = 0 ;
+  while ( nLine != 0 ) do
+    I = nLine % 10 ;
+    Push ( ) ;
+
+    nLine = nLine / 10 ;
+  end
+
+  while ( pStk != 0 ) do
+  // Ch = Pop ( )  + 48 ;
+    Chr = Pop ( )  + 48 ;
+    putchr ( ) ;
+  end
+
+  close ( ) ;
+  halt  ( ) ;
+end
+
+
+word  E ;
+word  J ;
+word  K ;
+word  N ;
+
+word  val  ( )
+  E = 10 ;
+  J =  0 ;
+  if ( Buff [ 0 ] = '0' ) then
+    if ( Buff [ 1 ] = 'x' ) then
+      E = 16 ;
+      J =  2 ;
+    end
+  end
+
+  N = 0 ;
+  while ( Buff [ J ]  != #0 ) do
+    K = 0 ;
+    while ( Heap [ K ]  != Buff [ J ] ) do
+      if ( K = E ) then
+        Stop ( ) ;
+      end
+
+      K = K + 1 ;
+    end
+
+ // N =  ( E * N )  + K ;
+    N = E * N ;
+    N = N + K ;
+    J = J + 1 ;
+  end
+
+  return N ;
+end
+
+
+char      Look ( )
+  if ( pText >= nText ) then
+    pText  = 0 ;
+    nText  = read ( ) ;
+  end
+
+  if ( pText >= nText ) then
+    return #0 ;
+  end
+
+  return   Text [ pText ] ;
+end
+
+
+word  Next ( )
+  pText = pText + 1 ;
+end
+
+
+char      Read ( )
+  Buff [ pBuff ]  =  Look ( ) ;
+  pBuff       = pBuff + 1 ;
+
+  Next ( ) ;
+end
+
+
+word  isalphanum ( )
+  if ( 'A' <= Look ( )  )  then
+    if ( Look ( ) <=  'Z' ) then
+      return 0 ;
+    end
+  end
+
+  if ( 'a' <= Look ( )  )  then
+    if ( Look ( ) <=  'z' ) then
+      return 0 ;
+    end
+  end
+
+  if ( '0' <= Look ( )  ) then
+    if ( Look ( ) <=  '9' ) then
+      return 0 ;
+    end
+  end
+
+  return     1 ;
+end
+
+
+word sFlag ;
+
+char      Scan ( )
+  pBuff = 0 ;
+  while ( pBuff = 0 ) do
+    sFlag = 0 ;
+    while ( sFlag = 0 ) do
+      if      ( Look ( ) = #9 ) then
+        Next ( ) ;
+      elseif  ( Look ( ) = #10 ) then
+        nLine = nLine + 1 ;
+        Next ( ) ;
+      elseif ( Look ( ) = #13 ) then
+        Next ( ) ;
+      elseif ( Look ( ) = #32 ) then
+        Next ( ) ;
+      else
+        sFlag = 1 ;
+      end
+    end
+
+    while ( isalphanum ( ) = 0 ) do
+      Read ( ) ;
+    end
+
+    if ( pBuff = 0 ) then
+      Read ( ) ;
+
+      if      ( Buff [ 0 ] = '<' ) then
+        if ( Look ( ) = '='  ) then
+          Read ( ) ;
+        end
+      elseif  ( Buff [ 0 ] = '!' ) then
+        if ( Look ( ) = '='  ) then
+          Read ( ) ;
+        end
+      elseif ( Buff [ 0 ] = '=' ) then
+        if ( Look ( ) = '='  ) then
+          Read ( ) ;
+        end
+      elseif ( Buff [ 0 ] = '>' ) then
+        if ( Look ( ) = '='  ) then
+          Read ( ) ;
+        end
+      elseif ( Buff [ 0 ] = '/' ) then
+        if ( Look ( ) = '/' ) then
+          while ( Look ( )  !=  #10 ) do
+            if ( Look ( ) = #0 ) then
+              Stop ( ) ;
+            end
+
+            Next ( ) ;
+          end
+
+          pBuff = 0 ;
+        end
+      end
+    end
+  end
+
+  Buff [ pBuff ]  =  #0 ;
+end
+
+
+word  Comp ( )
+  pBuff = 0 ;
+  while ( Buff [ pBuff ] = Heap [ pHeap ] ) do
+    if ( Buff [ pBuff ] = #0 ) then
+      return    0 ;
+    end
+
+    pHeap = pHeap + 1 ;
+    pBuff = pBuff + 1 ;
+  end
+
+  return        1 ;
+end
+
+
+word  Find ( )
+  pName = 0 ;
+  while ( pName < nName ) do
+    pHeap = Name [ pName ] ;
+    if ( Comp ( ) = 0 ) then
+      return pName ;
+    end
+
+    pName    = pName + 1 ;
+  end
+
+  return     pName ;
+end
+
+
+// char      C ;
+word      C ;    
+
+char      Emit1 ( )
+  Code [ nCode ] = C ;
+  nCode = nCode + 1 ;
+end
+
+
+word  Emit2 ( )
+  C = N % 256 ;
+  Emit1 ( ) ;
+  C = N / 256 ;
+  Emit1 ( ) ;
+end
+
+
+word  Const ( )
+  if ( '0' <= Buff [ 0 ] ) then
+    if ( Buff [ 0 ] <= '9' ) then
+      N =  val ( ) ;
+      return 0 ;
+    end
+  end
+
+  if ( Buff [ 0 ] = #39 ) then
+    N = CharToWord( Look ( ) ) ;
+
+    Next ( ) ;
+    Look ( ) ;
+    Next ( ) ;
+
+    return   0 ;
+  end
+
+  return     1 ;
+end
+
+
+word  Shl  ( )
+  if ( Size [ Type [ I ] ] = 2 ) then
+    C = 209 ;                             // 0xD1 // shl  BX, 1
+    Emit1 ( ) ;
+    C = 227 ;                             // 0xE3
+    Emit1 ( ) ;
+  end
+end
+
+
+word  Call ( )
+  Scan ( ) ;                              // (
+  Scan ( ) ;                              // )
+
+  C = 232 ;                               // 0xE8 // call Ofs
+  N = nCode + 3 ;                         // N = ( 0xFFFF - ( ( nCode + 3 ) - Ofs [ I ] ) ) + 1 ;
+  N = N - Ofs [ I ] ;
+  N = 65535 - N ;
+  N = N + 1 ;
+  Emit1 ( ) ;
+  Emit2 ( ) ;
+end
+
+
+word  Expr ( )
+  if      ( Const ( ) = 0 ) then
+    C = 184 ;                             // 0xB8 // mov  AX, Val
+    Emit1 ( ) ;
+    Emit2 ( ) ;
+  elseif  ( Buff [ 0 ] = '(' ) then
+    Scan ( ) ;
+    Expr ( ) ;
+  else
+    I            = Find ( ) ;
+    if      ( I = nName ) then
+      Stop ( ) ;
+    elseif  ( Cls [ I ] = 2 ) then
+      if ( Size [ I ]  != 1 ) then
+        Push ( ) ;
+        Scan ( ) ;                        //  [
+        Scan ( ) ;
+        Expr ( ) ;
+        I = Pop ( ) ;
+
+        C = 147 ;                         // 0x93 // xchg BX, AX
+        Emit1 ( ) ;
+        Shl   ( ) ;
+      end
+
+      C = 139 ;                           // 0x8B // mov  AX,  [ ( BX +  ) Ofs ]
+      if ( Size [ Type [ I ] ] = 1 ) then
+        C = 50 ;                          // 0x32 // xor  AH, AH
+        Emit1 ( ) ;
+        C = 228 ;                         // 0xE4
+        Emit1 ( ) ;
+
+        C = 138 ;                         // 0x8A // mov  AL,  [ ( BX +  ) Ofs ]
+      end
+
+      Emit1 ( ) ;
+
+      C = 6 ;                             // 0x06 //  [ Ofs ]
+      if ( Size [ I ]  != 1 ) then
+        C = 135 ;                         // 0x87 //  [ BX + Ofs ]
+      end
+
+      Emit1 ( ) ;
+
+      N = Ofs [ I ] ;
+      Ofs [ I ] = nCode ;
+      Emit2 ( ) ;
+    elseif  ( Cls [ I ] = 3 ) then
+      Call ( ) ;
+    else
+      Stop ( ) ;
+    end
+  end
+
+  Scan ( ) ;
+  if      ( Buff [ 0 ] = '+' ) then
+    I = 1 ;
+  elseif  ( Buff [ 0 ] = '-' ) then
+    I = 2 ;
+  elseif  ( Buff [ 0 ] = '*' ) then
+    I = 3 ;
+  elseif  ( Buff [ 0 ] = '/' ) then
+    I = 4 ;
+  elseif  ( Buff [ 0 ] = '%' ) then
+    I = 5 ;
+  else
+    return 0 ;
+  end
+
+  C = 80 ;                                // 0x50 // push AX
+  Emit1 ( ) ;
+
+  Push  ( ) ;
+  Scan  ( ) ;
+  Expr  ( ) ;
+  I = Pop ( ) ;
+
+  C = 91 ;                                // 0x5B // pop  BX
+  Emit1 ( ) ;
+
+  C = 147 ;                               // 0x93 // xchg BX, AX
+  Emit1 ( ) ;
+
+  if      ( I = 1 ) then
+    C = 3 ;                               // 0x03 // add  AX, BX
+    Emit1 ( ) ;
+    C = 195 ;                             // 0xC3
+    Emit1 ( ) ;
+  elseif  ( I = 2 ) then
+ // C = 147 ;                             // 0x93 // xchg BX, AX
+ // Emit1 ( ) ;
+
+    C = 43 ;                              // 0x2B // sub  AX, BX
+    Emit1 ( ) ;
+    C = 195 ;                             // 0xC3
+    Emit1 ( ) ;
+  elseif  ( I = 3 ) then
+    C = 247 ;                             // 0xF7 // mul  BX
+    Emit1 ( ) ;
+    C = 227 ;                             // 0xE3
+    Emit1 ( ) ;
+  else
+ // C = 147 ;                             // 0x93 // xchg BX, AX
+ // Emit1 ( ) ;
+
+    C = 51 ;                              // 0x33 // xor  DX, DX
+    Emit1 ( ) ;
+    C = 210 ;                             // 0xD2
+    Emit1 ( ) ;
+
+    C = 247 ;                             // 0xF7 // div  BX
+    Emit1 ( ) ;
+    C = 243 ;                             // 0xF3
+    Emit1 ( ) ;
+
+    if ( I = 5 ) then
+      C = 146 ;                           // 0x92 // xchg DX, AX
+      Emit1 ( ) ;
+    end
+  end
+end
+
+
+word jCode ;
+
+word  Cond ( )
+  Scan ( ) ;
+  Expr ( ) ;
+
+  if      ( Buff [ 0 ] = '<' ) then
+    jCode = 114 ;                         // 0x72 // jb   Ofs
+    if ( Buff [ 1 ] = '='  ) then
+      jCode = 118 ;                       // 0x76 // jbe  Ofs
+    end
+  elseif  ( Buff [ 0 ] = '='  ) then
+    jCode = 116 ;                         // 0x74 // je   Ofs
+  elseif  ( Buff [ 0 ] = '!' ) then
+    jCode = 117 ;                         // 0x75 // jne  Ofs
+  elseif  ( Buff [ 0 ] = '>' ) then
+    jCode = 119 ;                         // 0x77 // ja   Ofs
+    if ( Buff [ 1 ] = '='  ) then
+      jCode = 115 ;                       // 0x73 // jae  Ofs
+    end
+  else
+    Stop ( ) ;
+  end
+
+  C = 80 ;                                // 0x50 // push AX
+  Emit1 ( ) ;
+
+  Scan ( ) ;
+  Expr ( ) ;
+
+  C = 91 ;                                // 0x5B // pop  BX
+  Emit1 ( ) ;
+
+  C = 59 ;                                // 0x3B // cmp  BX, AX
+  Emit1 ( ) ;
+  C = 216 ;                               // 0xD8
+  Emit1 ( ) ;
+
+  C = jCode ;                             // jxx  Ofs
+  Emit1 ( ) ;
+  C = 3 ;                                 // 0x03
+  Emit1 ( ) ;
+
+  I = nCode ;
+  Push ( ) ;
+
+  C = 233 ;                               // 0xE9 // jmp  ?
+  Emit1 ( ) ;
+  nCode = nCode + 2 ;
+end
+
+
+word  Patch ( )
+  N = nCode - I ;                         // N = ( nCode - I ) - 3 ;
+  N = N - 3 ;
+
+  Code [ I + 1 ]  = N % 256 ;
+  Code [ I + 2 ]  = N / 256 ;
+end
+
+
+word  Ctrl ( )
+  I            =  Find ( ) ;
+  if      ( I >= nName ) then
+    Stop ( ) ;
+  elseif  ( I = 2 ) then                 // {
+    Scan ( ) ;
+    Ctrl ( ) ;
+    while ( Buff [ 0 ] !=  '}' ) do
+      Ctrl ( ) ;
+    end
+
+    Scan ( ) ;                            // !!!
+  elseif  ( I = 3 ) then                 // if
+    Scan ( ) ;                            // (
+    Cond ( ) ;
+
+    Scan ( ) ;
+    Ctrl ( ) ;
+
+    pHeap = 35 ;                          // else
+    if ( Comp ( ) = 0 ) then
+      C = 233 ;                           // 0xE9 // jmp  ?
+      Emit1 ( ) ;
+      nCode = nCode + 2 ;
+
+      I = Pop ( ) ;
+
+      Patch ( ) ;
+
+      I = nCode - 3 ;
+      Push ( ) ;
+
+      Scan ( ) ;
+      Ctrl ( ) ;
+    end
+
+    I = Pop ( ) ;
+
+    Patch ( ) ;
+  elseif  ( I = 4 ) then                 // while
+    I = nCode ;
+    Push ( ) ;
+
+    Scan ( ) ;                            // (
+    Cond ( ) ;
+
+    Scan ( ) ;
+    Ctrl ( ) ;
+
+    I = Pop ( ) ;
+
+    C = 233 ;                             // 0xE9 // jmp  Ofs
+    N = nCode + 3 ;                       // N = ( 0xFFFF - ( ( nCode + 3 ) - Pop ( ) ) ) + 1 ;
+    N = N - Pop ( ) ;
+    N = 65535 - N ;
+    N = N + 1 ;
+    Emit1 ( ) ;
+    Emit2 ( ) ;
+
+    Patch ( ) ;
+  elseif  ( I = 5 ) then                 // asm
+    Scan ( ) ;                            // db
+
+    if ( Buff [ 1 ] = 'w' ) then         // dw
+      Scan ( ) ;                          // offset
+      Scan ( ) ;
+      I           =  Find ( ) ;
+      if     ( I >= nName ) then
+        Stop ( ) ;
+      end
+
+      N = Ofs [ I ] ;
+      Ofs [ I ] = nCode ;
+      Emit2 ( ) ;
+
+      Scan ( ) ;                          // ;
+    else
+      Buff [ 0 ]   =  ',' ;
+      while ( Buff [ 0 ] = ',' ) do
+        Scan  ( ) ;
+        C = val ( ) ;                     // db   Val
+        Emit1 ( ) ;
+
+        Scan  ( ) ;
+      end
+    end
+
+    Scan ( ) ;                            // !!!
+  elseif  ( I = 6 ) then                 // return
+    Scan ( ) ;
+    Expr ( ) ;
+
+    C = 195 ;                             // 0xC3 // retn
+    Emit1 ( ) ;
+
+    Scan ( ) ;                            // !!!
+  elseif  ( Cls [ I ] = 2 ) then
+    Push ( ) ;
+
+    if ( Size [ I ]  != 1 ) then
+      Scan ( ) ;                          // [
+      Scan ( ) ;
+      Expr ( ) ;
+
+      C = 80 ;                            // 0x50 // push AX
+      Emit1 ( ) ;
+    end
+
+    Scan ( ) ;                            // =
+    Scan ( ) ;
+    Expr ( ) ;
+
+    I = Pop ( ) ;
+
+    if ( Size [ I ]  != 1 ) then
+      C = 91 ;                            // 0x5B // pop  BX
+      Emit1 ( ) ;
+      Shl   ( ) ;
+    end
+
+    C = 137 ;                             // 0x89 // mov  [ ( BX + ) Ofs ] , AX
+    if  ( Size [ Type [ I ] ] = 1 ) then
+      C = 136 ;                           // 0x88 // mov  [ ( BX + ) Ofs ] , AL
+    end
+
+    Emit1 ( ) ;
+
+    C = 6 ;                               // 0x06 //  [ Ofs ]
+    if ( Size [ I ]  != 1 ) then
+      C = 135 ;                           // 0x87 //  [ BX + Ofs ]
+    end
+
+    Emit1 ( ) ;
+
+    N = Ofs [ I ] ;
+    Ofs   [ I ]  = nCode ;
+    Emit2 ( ) ;
+
+    Scan ( ) ;                            // !!!
+  elseif  ( Cls [ I ] = 3 ) then
+    Call ( ) ;
+    Scan ( ) ;                            // ;
+    Scan ( ) ;                            // !!!
+  else
+    Stop ( ) ;
+  end
+end
+
+word J1 ;
+
+word  AssignOfs ( )
+  nData = nCode +  256 ;                  // nData = ( ( ( nCode + 256 ) + 1023 ) / 1024 ) * 1024 ;
+  nData = nData + 1023 ;
+  nData = nData / 1024 ;
+  nData = nData * 1024 ;
+
+  I = 0 ;
+  while ( I < nName ) do
+    if ( Cls [ I ] = 2 ) then
+      J = Ofs  [ I ] ;
+      while ( J != 0 ) do
+        J1 = J + 1 ;
+        K  = ByteToWord ( Code [ J ] ) ;
+        N  = ByteToWord (Code [ J1 ] ) ;  // N = Code [ J + 1 ]  + 256 ;
+
+        Code [ J ]  = nData % 256 ;
+        Code [ J1 ] = nData / 256 ;       // Code [ J + 1 ]  = nData / 256 ;
+
+        J = N % 256 ;                     // J = ( 256 * ( N % 256 ) ) + ( K % 256 ) ;
+        J = J * 256 ;
+        K = K % 256 ;
+        J = J + K ;
+      end
+
+      N = Size [ Type [ I ] ] * Size [ I ] ;
+      while ( N % 2 != 0 ) do
+        N = N + 1 ;
+      end
+
+      nData = nData + N ;
+    end
+
+    I = I + 1 ;
+  end
+end
+
+
+word mFlag ;
+
+word  Compile ( )
+  C = 233 ;                               // 0xE9 // jmp  ?
+  Emit1 ( ) ;
+  nCode = nCode + 2 ;
+
+  Scan ( ) ;
+
+  mFlag = 0 ;
+  while ( mFlag = 0 ) do
+    I = Find ( ) ;
+    if ( I = nName ) then
+      Stop ( ) ;
+    end
+
+    if ( Cls [ I ] != 1 ) then
+      Stop ( ) ;
+    end
+
+    Name [ nName ] = nHeap ;
+    Type [ nName ] =  I ;
+    Ofs  [ nName ] =  0 ;
+
+    Scan ( ) ;
+    if ( Find ( ) < nName ) then
+      Stop ( ) ;
+    end
+
+    pHeap = 57 ;                          // main
+    if ( Comp ( ) = 0 ) then
+      N          = nCode - 3 ;
+      Code [ 1 ] =  N %  256 ;
+      Code [ 2 ] =  N /  256 ;
+
+      mFlag   =  1 ;
+    end
+
+    pBuff = 0 ;
+    while ( Buff [ pBuff ]  != #0 ) do
+      Heap [ nHeap ] =  Buff [ pBuff ] ;
+      nHeap          = nHeap + 1 ;
+      pBuff          = pBuff + 1 ;
+    end
+
+    Heap [ nHeap ] = #0 ;
+    nHeap          = nHeap + 1 ;
+
+    Scan ( ) ;
+    if ( Buff [ 0 ] = '(' ) then
+      Cls  [ nName ] =  3 ;
+      Ofs  [ nName ] = nCode ;
+      nName          = nName + 1 ;
+
+      Scan ( ) ;                          // void
+      Scan ( ) ;                          // )
+      Scan ( ) ;                          // {
+      if ( Buff [ 0 ] !=  '{' ) then
+        Stop ( ) ;
+      end
+
+      Ctrl ( ) ;
+
+      C = 195 ;                           // 0xC3 // retn
+      Emit1 ( ) ;
+    else
+      if ( mFlag != 0 ) then
+        Stop ( ) ;
+      end
+
+      Cls  [ nName ] = 2 ;
+      Size [ nName ] = 1 ;
+
+      if ( Buff [ 0 ] = '[' ) then
+        Scan ( ) ;
+        Size [ nName ] = val ( ) ;
+        Scan ( ) ;                        // ]
+        Scan ( ) ;                        // ;
+      end
+
+      nName = nName + 1 ;
+
+      Scan ( ) ;
+    end
+  end
+
+  AssignOfs ( ) ;
+end
+
+
+begin
+  Init ( ) ;
+
+  hFile = open ( ) ;
+  pText = 0 ;
+  nText = 0 ;
+  nLine = 1 ;
+
+  Compile ( ) ;
+
+  close ( ) ;
+
+  hFile = create ( ) ;
+  write ( ) ;
+  close ( ) ;
+end
